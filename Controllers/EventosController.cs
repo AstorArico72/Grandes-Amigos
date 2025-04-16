@@ -13,9 +13,11 @@ public class EventosController : Controller {
     // CRUD de eventos
     // Patrón: [host]/Eventos
     private readonly ILogger<EventosController> _logger;
+    private ContextoDb Contexto;
 
-    public EventosController(ILogger<EventosController> logger) {
+    public EventosController(ILogger<EventosController> logger, ContextoDb contexto) {
         _logger = logger;
+        Contexto = contexto;
     }
 
     [HttpGet("/")]
@@ -24,13 +26,18 @@ public class EventosController : Controller {
     }
 
     [HttpGet("{id}")]
-    public IActionResult VerEvento(int id) {
+    public IActionResult VerEvento([FromRoute] int id) {
         //Éste método carga la vista de detalles.
         //Pendiente: Cargar vistas Angular desde Dotnet.
         //Es importante que las vistas de éste endpoint tengan un botón que enlace a /Inscripcion, con el ID del evento cargado en el querystring.
         //Es decir, /Inscripcion?idEvento={id}
         //Ve a InscripcionController.cs para saber por qué.
-        return View();
+        Evento? EventoEncontrado = Contexto.Eventos.Find (id);
+        if (EventoEncontrado == null) {
+            return NotFound ();
+        } else {
+            return Ok (EventoEncontrado);
+        }
     }
 
     [Authorize] //Pendiente: Crear políticas y roles
