@@ -11,7 +11,7 @@ public class Evento {
     public DateTime Fecha {get; set;}
     public string Título {get; set;}
     public string Descripción {get; set;}
-    [ForeignKey("IdMinisterio")]
+    [ForeignKey("Ministerio-Evento")]
     public int IdMinisterio {get; set;}
 
     public Evento (string titulo, string descripcion, DateTime fecha, int ministerio) {

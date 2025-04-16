@@ -6,8 +6,8 @@ namespace Grandes_Amigos.Models;
 
 [Keyless]
 public class Inscripción {
-    [ForeignKey("IdEvento")]
+    [ForeignKey("Evento-Inscripción")]
     public int IdEvento {get;}
-    [ForeignKey("IdInscrito")]
+    [ForeignKey("Inscrito-Inscripción")]
     public int IdInscrito {get;}
 }
