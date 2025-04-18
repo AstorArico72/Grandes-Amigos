@@ -2,20 +2,26 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
+using MySqlConnector;
+using Microsoft.EntityFrameworkCore;
 
 namespace Grandes_Amigos.Controllers;
 
+[ApiController]
 [AllowAnonymous] //El uso de [AllowAnonymous] es porque éste endpoint es usado por los visitantes del sitio, quienes, como se ha discutido antes, no necesitan registrarse.
-[Route("Inscripcion")]
+[Route("/Api/Inscripciones")]
 public class InscripcionController : Controller {
     // InscripcionController.cs
     // 
     // CRUD de inscripciones
-    // Patrón: [host]/Inscripcion
+    // Patrón: [host]/Api/Inscripciones
     private readonly ILogger<InscripcionController> _logger;
+    private ContextoDb Contexto;
 
-    public InscripcionController(ILogger<InscripcionController> logger) {
+    public InscripcionController(ILogger<InscripcionController> logger, ContextoDb contexto) {
         _logger = logger;
+        Contexto = contexto;
     }
 
     [HttpGet("/")]
@@ -28,14 +34,25 @@ public class InscripcionController : Controller {
         return View();
     }
 
-    [HttpPost("/Nueva")]
-    public IActionResult NuevaInscripcion () {
-        //Pendiente: Objeto modelo para la entidad inscripción.
-        //Pendiente: Implementar lógica de inscripción.
-
-        //El campo que hace referencia al evento es llenado por el querystring en "FormularioInscripcion".
+    [HttpPost("Nueva")]
+    public async Task<IActionResult> NuevaInscripcion ([FromForm]int IdInscrito, [FromForm]int IdEvento) {
+        //Validación para confirmar si llegaron valores correctos.
+        Inscrito? InscritoEncontrado = await Contexto.Inscritos.FindAsync (IdInscrito);
+        Evento? EventoEncontrado = await Contexto.Eventos.FindAsync (IdEvento); //Éste campo es llenado por el querystring en "FormularioInscripcion".
         //Es decir, si uno se ha inscrito mediante ésta URL: /Inscripcion?idEvento=101, el valor "101" es puesto en el <input> escondido que es parte de los datos de la inscripción, y éso llena el campo "IdEvento" aquí.
-        return Created ();
+
+        if (InscritoEncontrado != null && EventoEncontrado != null) {
+            Inscripción NuevaInscripción = new Inscripción (EventoEncontrado.ID, InscritoEncontrado.NumDocumento);
+            try {
+                Contexto.Inscripciones.Add (NuevaInscripción);
+                Contexto.Entry (NuevaInscripción).State = EntityState.Detached;
+                return Created ();
+            } catch (MySqlException ex) {
+                return StatusCode (500, ex);
+            }
+        } else {
+            return BadRequest ("Evento o inscrito inválidos.");
+        }
     }
 
     //Pendiente: Manejo de errores

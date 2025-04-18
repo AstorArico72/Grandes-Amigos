@@ -5,12 +5,13 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Grandes_Amigos.Controllers;
 
-[Route("Inscritos")]
+[ApiController]
+[Route("/Api/Inscritos")]
 public class InscritosController : Controller {
     // InscritosController.cs
     // 
     // CRUD de Inscritos
-    // Patrón: [host]/Inscritos
+    // Patrón: [host]/Api/Inscritos
     private readonly ILogger<InscritosController> _logger;
     private ContextoDb Contexto;
 

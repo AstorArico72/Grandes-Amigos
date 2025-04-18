@@ -10,4 +10,9 @@ public class Inscripción {
     public int IdEvento {get;}
     [ForeignKey("Inscrito-Inscripción")]
     public int IdInscrito {get;}
+
+    public Inscripción (int evento, int inscrito) {
+        IdEvento = evento;
+        IdInscrito = inscrito;
+    }
 }

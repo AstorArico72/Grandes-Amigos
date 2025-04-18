@@ -11,8 +11,9 @@ public class Evento {
     public DateTime Fecha {get; set;}
     public string Título {get; set;}
     public string Descripción {get; set;}
+    //Pendiente: Averiguar si se va a trabajar con una foto por evento o una galería.
     [ForeignKey("Ministerio-Evento")]
-    public int IdMinisterio {get; set;}
+    public int IdMinisterio {get; set;} 
 
     public Evento (string titulo, string descripcion, DateTime fecha, int ministerio) {
         Título = titulo;
