@@ -3,16 +3,28 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Grandes_Amigos.Models;
 
-public class Inscrito {
+public class Inscrito
+{
     [Key]
-    public int NumDocumento {get;}
-    public string TipoDocumento {get; set;}
-    public string Correo {get; set;}
-    public string Teléfono {get; set;}
-    // Es necesario averiguar si hay que hacer una tabla "asociación" y convertir éste campo en una clave foránea.
-    public string Asociación {get; set;}
+    public int NumDocumento { get; set; } // ✔ Ahora EF puede mapearlo
 
-    public Inscrito (int documento, string tipoDocumento, string correo, string telefono, string asociacion) {
+    public string TipoDocumento { get; set; }
+    public string Correo { get; set; }
+    public string Teléfono { get; set; }
+    public string Asociación { get; set; }
+
+    // ✔ Constructor requerido por EF Core
+    public Inscrito() { }
+
+    // ✔ Constructor personalizado opcional
+    public Inscrito(
+        int documento,
+        string tipoDocumento,
+        string correo,
+        string telefono,
+        string asociacion
+    )
+    {
         NumDocumento = documento;
         TipoDocumento = tipoDocumento;
         Correo = correo;

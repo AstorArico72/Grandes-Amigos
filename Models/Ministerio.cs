@@ -2,12 +2,19 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Grandes_Amigos.Models;
 
-public class Ministerio {
+public class Ministerio
+{
     [Key]
-    public int ID {get;}
-    public string Nombre {get; set;}
+    public int ID { get; set; } // ✅ Ahora EF puede mapearlo correctamente
 
-    public Ministerio (int id, string nombre) {
+    public string Nombre { get; set; }
+
+    // ✅ Constructor vacío requerido por EF Core
+    public Ministerio() { }
+
+    // ✅ Constructor útil para lógica de negocio o tests
+    public Ministerio(int id, string nombre)
+    {
         ID = id;
         Nombre = nombre;
     }

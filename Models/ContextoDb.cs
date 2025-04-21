@@ -1,16 +1,17 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Grandes_Amigos.Models;
 using Microsoft.EntityFrameworkCore;
-public class ContextoDb : DbContext {
+
+public class ContextoDb : DbContext
+{
     private readonly string ConnectionString;
 
-    public DbSet<Evento> Eventos;
-    public DbSet<Inscripción> Inscripciones;
-    public DbSet<Usuario> Usuarios;
-    public DbSet<Ministerio> Ministerios;
-    public DbSet<Inscrito> Inscritos;
+    public DbSet<Evento> Eventos { get; set; }
+    public DbSet<Inscripción> Inscripciones { get; set; }
+    public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Ministerio> Ministerios { get; set; }
+    public DbSet<Inscrito> Inscritos { get; set; }
 
-    public ContextoDb (DbContextOptions<ContextoDb> opciones) : base (opciones) {
-
-    }
+    public ContextoDb(DbContextOptions<ContextoDb> opciones)
+        : base(opciones) { }
 }
