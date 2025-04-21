@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MySqlConnector;
 using Microsoft.EntityFrameworkCore;
 
-namespace Grandes_Amigos.Controllers;
+namespace Grandes_Amigos.Api;
 
 [ApiController]
 [AllowAnonymous] //El uso de [AllowAnonymous] es porque éste endpoint es usado por los visitantes del sitio, quienes, como se ha discutido antes, no necesitan registrarse.
@@ -24,7 +24,7 @@ public class InscripcionController : Controller {
         Contexto = contexto;
     }
 
-    [HttpGet("/")]
+    [HttpGet("Inscribirse")]
     public IActionResult FormularioInscripcion([FromQuery] int IdEvento) {
         //Éste método carga el formulario para la inscripción.
         //Cada evento en /Eventos/{id} tendrá un botón que enlaza a ésta URL, con el ID del evento en el querystring.
@@ -56,8 +56,4 @@ public class InscripcionController : Controller {
     }
 
     //Pendiente: Manejo de errores
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error() {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
 }

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Grandes_Amigos.Controllers;
+namespace Grandes_Amigos.Api;
 
 [ApiController]
 [Route("/Api/Inscritos")]
@@ -20,8 +20,8 @@ public class InscritosController : Controller {
         Contexto = contexto;
     }
 
-    [HttpGet("/")]
-    public IActionResult Index () {
+    [HttpGet("Todos")]
+    public IActionResult VerTodos () {
         List <Inscrito> inscritos = Contexto.Inscritos.ToList ();
         return Ok (inscritos);
     }

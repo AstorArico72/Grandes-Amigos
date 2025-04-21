@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 
-namespace Grandes_Amigos.Controllers;
+namespace Grandes_Amigos.Api;
 
 [ApiController]
 [AllowAnonymous]
-[Route("Api/Eventos")]
+[Route("/Api/Eventos")]
 public class EventosController : Controller {
     // EventosController.cs
     // 
@@ -23,18 +23,19 @@ public class EventosController : Controller {
         Contexto = contexto;
     }
 
-    [HttpGet("/")]
+    [HttpGet("Lista")]
     public IActionResult VerTodos() {
-        return Ok (Contexto.Eventos.ToList ());
+        List<Evento> Eventos = Contexto.Eventos.ToList ();
+        return Ok (Eventos);
     }
 
     [HttpGet("{id}")]
-    public IActionResult VerEvento([FromRoute] int id) {
+    public async Task<IActionResult> VerEvento([FromRoute] int id) {
         //Éste método carga la vista de detalles.
         //Es importante que las vistas de éste endpoint tengan un botón que enlace a /Inscripcion, con el ID del evento cargado en el querystring.
         //Es decir, algo como /Inscripcion?idEvento={id}
         //Ve a InscripcionController.cs para saber por qué.
-        Evento? EventoEncontrado = Contexto.Eventos.Find (id);
+        Evento? EventoEncontrado = await Contexto.Eventos.FindAsync (id);
         if (EventoEncontrado == null) {
             return NotFound ();
         } else {
@@ -47,11 +48,11 @@ public class EventosController : Controller {
     public async Task<IActionResult> NuevoEvento ([FromForm]Evento NuevoEvento) {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
 
-        Ministerio? ministerio = await Contexto.Ministerios.FindAsync (NuevoEvento.IdMinisterio);
+        Ministerio? ministerio = await Contexto.Ministerios.FindAsync (NuevoEvento.ID_Ministerio);
 
         //Ésto asegura que el campo "ministerio" no apunte a un ministerio que no existe.
         if (ministerio == null) {
-            return BadRequest ("El ministerio con ID #" + NuevoEvento.IdMinisterio + " no existe.");
+            return BadRequest ("El ministerio con ID #" + NuevoEvento.ID_Ministerio + " no existe.");
         }
 
         //Ésto asegura que los eventos sólo puedan crearse con fechas futuras.
@@ -141,8 +142,4 @@ public class EventosController : Controller {
     }
 
     //Pendiente: Manejo de errores
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error() {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
 }
