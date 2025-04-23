@@ -43,9 +43,9 @@ public class EventosController : Controller {
         }
     }
 
-    [Authorize]
+    [AllowAnonymous]
     [HttpPost("Nuevo")]
-    public async Task<IActionResult> NuevoEvento ([FromForm]Evento NuevoEvento) {
+    public async Task<IActionResult> NuevoEvento ([FromBody]Evento NuevoEvento) {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
 
         Ministerio? ministerio = await Contexto.Ministerios.FindAsync (NuevoEvento.ID_Ministerio);
@@ -72,7 +72,7 @@ public class EventosController : Controller {
         if (ModelState.IsValid) { //Pendiente: Usar anotaciones para determinar la propiedad ModelState.IsValid
             try {
                 Contexto.Eventos.Add (NuevoEvento);
-                Contexto.Entry (NuevoEvento).State = EntityState.Detached;
+                await Contexto.SaveChangesAsync ();
                 return Created ();
             } catch (MySqlException ex) {
                 return StatusCode (500, ex);

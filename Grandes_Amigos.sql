@@ -45,6 +45,7 @@ CREATE TABLE `Eventos` (
 --
 
 CREATE TABLE `Inscripciones` (
+  `ID` int(10) UNSIGNED NOT NULL,
   `ID_Evento` int(10) UNSIGNED NOT NULL,
   `ID_Inscrito` int(9) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
@@ -103,6 +104,7 @@ ALTER TABLE `Eventos`
 -- Indices de la tabla `Inscripciones`
 --
 ALTER TABLE `Inscripciones`
+  ADD PRIMARY KEY (`ID`),
   ADD KEY `ID_Inscrito` (`ID_Inscrito`),
   ADD KEY `ID_Evento` (`ID_Evento`);
 
@@ -146,6 +148,9 @@ ALTER TABLE `Ministerios`
 -- AUTO_INCREMENT de la tabla `Usuarios`
 --
 ALTER TABLE `Usuarios`
+  MODIFY `ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `Inscripciones`
   MODIFY `ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --

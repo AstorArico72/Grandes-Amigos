@@ -8,7 +8,7 @@ namespace Grandes_Amigos.Models;
 public class Evento
 {
     [Key]
-    public int ID { get; set; } // ✅ Ahora EF puede asignar el valor de la DB
+    public int ID { get; set; } //Ahora EF puede asignar el valor de la DB
 
     public DateTime Fecha { get; set; }
     public string Título { get; set; }
@@ -19,7 +19,7 @@ public class Evento
 
     public string Foto { get; set; }
 
-    // ✅ Constructor requerido por EF Core
+    //Constructor requerido por EF Core
     public Evento() { }
 
     // Constructor personalizado para crear objetos fácilmente

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
+using MySqlConnector;
 
 namespace Grandes_Amigos.Api;
 
@@ -33,6 +34,22 @@ public class InscritosController : Controller {
             return NotFound ();
         } else {
             return Ok (InscritoEncontrado);
+        }
+    }
+
+    [AllowAnonymous] //Ésto es temporal, hasta que se implementen las políticas de acceso.
+    [HttpPost("Nuevo")]
+    public async Task<IActionResult> NuevoInscrito ([FromBody]Inscrito NuevoInscrito) {
+        if (ModelState.IsValid) { //Pendiente: Usar anotaciones para determinar la propiedad ModelState.IsValid
+            try {
+                Contexto.Inscritos.Add (NuevoInscrito);
+                await Contexto.SaveChangesAsync ();
+                return Created ();
+            } catch (MySqlException ex) {
+                return StatusCode (500, ex);
+            }
+        } else {
+            return BadRequest ("Estado de modelo inválido.");
         }
     }
 }

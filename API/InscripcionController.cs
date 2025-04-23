@@ -42,10 +42,10 @@ public class InscripcionController : Controller {
         //Es decir, si uno se ha inscrito mediante ésta URL: /Inscripcion?idEvento=101, el valor "101" es puesto en el <input> escondido que es parte de los datos de la inscripción, y éso llena el campo "IdEvento" aquí.
 
         if (InscritoEncontrado != null && EventoEncontrado != null) {
-            Inscripción NuevaInscripción = new Inscripción (EventoEncontrado.ID, InscritoEncontrado.NumDocumento);
+            Inscripción NuevaInscripcion = new Inscripción (EventoEncontrado.ID, InscritoEncontrado.NumDocumento);
             try {
-                Contexto.Inscripciones.Add (NuevaInscripción);
-                Contexto.Entry (NuevaInscripción).State = EntityState.Detached;
+                Contexto.Inscripciones.Add (NuevaInscripcion);
+                await Contexto.SaveChangesAsync ();
                 return Created ();
             } catch (MySqlException ex) {
                 return StatusCode (500, ex);
@@ -55,5 +55,20 @@ public class InscripcionController : Controller {
         }
     }
 
-    //Pendiente: Manejo de errores
+    [HttpGet("PorEvento")]
+    public IActionResult InscripcionesPorEvento ([FromQuery]int IdEvento) {
+        try {
+            Evento? EventoEncontrado = Contexto.Eventos.Find (IdEvento);
+            List<Inscripción>? Inscripciones = Contexto.Inscripciones.Where (inscripcion => inscripcion.ID_Evento == IdEvento).ToList ();
+            if (EventoEncontrado == null) {
+                return BadRequest ("El evento seleccionado no existe.");
+            } else if (Inscripciones.Count () == 0) {
+                return NoContent ();
+            } else {
+                return Ok (Inscripciones);
+            }
+        } catch (MySqlException ex) {
+            return StatusCode (500, ex);
+        }
+    }
 }
