@@ -4,11 +4,13 @@ using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Grandes_Amigos.Api;
 
 [ApiController]
-[AllowAnonymous]
+[AllowAnonymous] //Ésta anotación está aquí porque la autorización no está implementada.
 [Route("/Api/Eventos")]
 public class EventosController : Controller {
     // EventosController.cs
@@ -43,7 +45,6 @@ public class EventosController : Controller {
         }
     }
 
-    [AllowAnonymous]
     [HttpPost("Nuevo")]
     public async Task<IActionResult> NuevoEvento ([FromBody]Evento NuevoEvento) {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
@@ -52,37 +53,34 @@ public class EventosController : Controller {
 
         //Ésto asegura que el campo "ministerio" no apunte a un ministerio que no existe.
         if (ministerio == null) {
-            return BadRequest ("El ministerio con ID #" + NuevoEvento.ID_Ministerio + " no existe.");
+            ModelState.AddModelError (nameof (NuevoEvento.ID_Ministerio), "El ministerio con ID #" + NuevoEvento.ID_Ministerio + " no existe.");
         }
 
         //Ésto asegura que los eventos sólo puedan crearse con fechas futuras.
-        if (NuevoEvento.Fecha <= DateTime.Today) {
+        if (DateTime.Compare (NuevoEvento.Fecha, DateTime.Today.AddDays (1)) <= 0) {
             //Pendiente: Consultar si los eventos tienen fecha de inicio y fecha de fin.
-            return BadRequest ("Los eventos deben crearse con al menos un día de anticipación.");
+            ModelState.AddModelError (nameof (NuevoEvento.Fecha), "Los eventos deben crearse con al menos un día de anticipación.");
         }
 
-        //Las dos validaciones debajo se explican solas.
-        if (string.IsNullOrEmpty (NuevoEvento.Título)) {
-            return BadRequest ("Falta un título para el evento.");
-        }
-        if (string.IsNullOrEmpty (NuevoEvento.Descripción)) {
-            return BadRequest ("Falta una descripción para el evento.");
-        }
-
-        if (ModelState.IsValid) { //Pendiente: Usar anotaciones para determinar la propiedad ModelState.IsValid
-            try {
+        try {
+            if (ModelState.IsValid) {
                 Contexto.Eventos.Add (NuevoEvento);
                 await Contexto.SaveChangesAsync ();
                 return Created ();
-            } catch (MySqlException ex) {
-                return StatusCode (500, ex);
+            } else {
+                // Pendiente: Reemplazar ésto por una página de error comprensiva en la implementación para los clientes.
+                List <string> ErroresModelo = new List<string> ();
+                var errores = ModelState.Values.SelectMany (value => value.Errors);
+                foreach (var item in errores) {
+                    ErroresModelo.Add (item.ErrorMessage);
+                }
+                return BadRequest ("Estado de modelo inválido:\n" + string.Join ("\n", ErroresModelo));
             }
-        } else {
-            return BadRequest ("Estado de modelo inválido.");
+        } catch (MySqlException ex) {
+            return StatusCode (500, ex);
         }
     }
 
-    [Authorize]
     [HttpPut("Editar")]
     public async Task<IActionResult> EditarEvento ([FromForm]Evento EventoEditado) {
         //Ésta función es para editar el evento como un todo.
@@ -92,29 +90,26 @@ public class EventosController : Controller {
         //Ésto sirve para revisar si llegó un ID erróneo. Tal vez sea necesario quitarlo.
         Evento? EventoSeleccionado = Contexto.Eventos.Find (EventoEditado.ID);
         if (EventoSeleccionado != null) {
-            //Debajo se hacen las mismas validaciones que en POST /Eventos/Nuevo
-            if (!string.IsNullOrEmpty(EventoEditado.Título)) {
-                EventoSeleccionado.Título = EventoEditado.Título;
-            } else {
-                return BadRequest ("Falta un título para el evento.");
+            if (EventoEditado.Fecha <= DateTime.Today) {
+                ModelState.AddModelError (nameof (EventoEditado.Fecha), "Los eventos deben crearse con al menos un día de anticipación.");
             }
-
-            if (!string.IsNullOrEmpty(EventoEditado.Descripción)) {
-                EventoSeleccionado.Descripción = EventoEditado.Descripción;
-            } else {
-                return BadRequest ("Falta una descripción para el evento.");
-            }
-
-            if (EventoEditado.Fecha > DateTime.Today) {await Contexto.SaveChangesAsync ();
-                EventoSeleccionado.Fecha = EventoEditado.Fecha;
-            } else {
-                return BadRequest ("Los eventos deben crearse con al menos un día de anticipación.");
-            }
-            
             try {
-                await Contexto.SaveChangesAsync ();
-                Contexto.Entry (EventoSeleccionado).State = EntityState.Modified;
-                return Ok ();
+                if (ModelState.IsValid) {
+                    EventoSeleccionado.Título = EventoEditado.Título;
+                    EventoSeleccionado.Fecha = EventoEditado.Fecha;
+                    EventoSeleccionado.Descripción = EventoEditado.Descripción;
+                    EventoSeleccionado.Foto = EventoEditado.Foto;
+                    await Contexto.SaveChangesAsync ();
+                    Contexto.Entry (EventoSeleccionado).State = EntityState.Modified;
+                    return Ok ();
+                } else {
+                    List <string> ErroresModelo = new List<string> ();
+                    var errores = ModelState.Values.SelectMany (value => value.Errors);
+                    foreach (var item in errores) {
+                        ErroresModelo.Add (item.ErrorMessage);
+                    }
+                    return BadRequest ("Estado de modelo inválido:\n" + string.Join ("\n", ErroresModelo));
+                }
             } catch (MySqlException ex) {
                 return StatusCode (500, ex);
             }
@@ -131,7 +126,7 @@ public class EventosController : Controller {
         if (EventoSeleccionado != null) {
             try {
                 Contexto.Remove (EventoSeleccionado);
-                Contexto.SaveChangesAsync ();
+                Contexto.SaveChanges ();
                 return Ok ();
             } catch (MySqlException ex) {
                 return StatusCode (500, ex);

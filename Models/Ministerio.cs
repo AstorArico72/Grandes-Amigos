@@ -1,18 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Grandes_Amigos.Models;
 
-public class Ministerio
-{
+[Table("Ministerios")]
+public class Ministerio {
     [Key]
-    public int ID { get; set; } // ✅ Ahora EF puede mapearlo correctamente
+    public int ID {get; set;}
 
-    public string Nombre { get; set; }
+    [Required(ErrorMessage = "Es necesario un nombre para el ministerio.", AllowEmptyStrings = false)]
+    public string Nombre {get; set;}
 
-    // ✅ Constructor vacío requerido por EF Core
+    // Constructor vacío requerido por EF Core
     public Ministerio() { }
 
-    // ✅ Constructor útil para lógica de negocio o tests
+    // Constructor útil para lógica de negocio o tests
     public Ministerio(int id, string nombre)
     {
         ID = id;

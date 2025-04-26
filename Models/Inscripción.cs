@@ -11,8 +11,11 @@ public class Inscripción {
     [Column("ID")]
     public int ID_Inscripción {get; set;}
 
-    [ForeignKey("ID_Evento")]
+    [Required]
+    [ForeignKey("ID_Evento")] //Pendiente: Averiguar cómo usar ésta anotación correctamente.
     public int ID_Evento {get; set;}
+
+    [Required]
     [ForeignKey("ID_Inscrito")]
 
     public int ID_Inscrito {get; set;}

@@ -40,16 +40,37 @@ public class InscritosController : Controller {
     [AllowAnonymous] //Ésto es temporal, hasta que se implementen las políticas de acceso.
     [HttpPost("Nuevo")]
     public async Task<IActionResult> NuevoInscrito ([FromBody]Inscrito NuevoInscrito) {
-        if (ModelState.IsValid) { //Pendiente: Usar anotaciones para determinar la propiedad ModelState.IsValid
-            try {
+        try {
+            if (ModelState.IsValid) {
                 Contexto.Inscritos.Add (NuevoInscrito);
                 await Contexto.SaveChangesAsync ();
                 return Created ();
+            } else {
+                List <string> ErroresModelo = new List<string> ();
+                var errores = ModelState.Values.SelectMany (value => value.Errors);
+                foreach (var item in errores) {
+                    ErroresModelo.Add (item.ErrorMessage);
+            }
+            return BadRequest ("Estado de modelo inválido:\n" + string.Join ("\n", ErroresModelo));
+            }
+        } catch (MySqlException ex) {
+            return StatusCode (500, ex);
+        }
+    }
+
+    [HttpDelete("Borrar/{id}")]
+    public IActionResult BorrarInscrito ([FromRoute]int id) {
+        Inscrito? InscritoSeleccionado = Contexto.Inscritos.Find (id);
+        if (InscritoSeleccionado != null) {
+            try {
+                Contexto.Remove (InscritoSeleccionado);
+                Contexto.SaveChanges ();
+                return Ok ();
             } catch (MySqlException ex) {
                 return StatusCode (500, ex);
             }
         } else {
-            return BadRequest ("Estado de modelo inválido.");
+            return BadRequest ("El inscrito seleccionado no existe.");
         }
     }
 }
