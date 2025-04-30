@@ -21,6 +21,7 @@ public class InscritosController : Controller {
         Contexto = contexto;
     }
 
+    [Authorize(Policy = "Ministerio")]
     [HttpGet("Todos")]
     public IActionResult VerTodos () {
         List <Inscrito> inscritos = Contexto.Inscritos.ToList ();

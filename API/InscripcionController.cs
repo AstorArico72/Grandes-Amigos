@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 namespace Grandes_Amigos.Api;
 
 [ApiController]
-[AllowAnonymous] //El uso de [AllowAnonymous] es porque éste endpoint es usado por los visitantes del sitio, quienes, como se ha discutido antes, no necesitan registrarse.
 [Route("/Api/Inscripciones")]
 public class InscripcionController : Controller {
     // InscripcionController.cs
@@ -24,6 +23,7 @@ public class InscripcionController : Controller {
         Contexto = contexto;
     }
 
+    [AllowAnonymous]
     [HttpGet("Inscribirse")]
     public IActionResult FormularioInscripcion([FromQuery] int IdEvento) {
         //Éste método carga el formulario para la inscripción.
@@ -34,6 +34,7 @@ public class InscripcionController : Controller {
         return View();
     }
 
+    [AllowAnonymous]
     [HttpPost("Nueva")]
     public async Task<IActionResult> NuevaInscripcion ([FromForm]int IdInscrito, [FromForm]int IdEvento) {
         //Validación para confirmar si llegaron valores correctos.
@@ -55,6 +56,7 @@ public class InscripcionController : Controller {
         }
     }
 
+    [Authorize(Policy = "Ministerio")]
     [HttpGet("PorEvento")]
     public IActionResult InscripcionesPorEvento ([FromQuery]int IdEvento) {
         try {

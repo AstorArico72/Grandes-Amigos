@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 namespace Grandes_Amigos.Api;
 
 [ApiController]
-[AllowAnonymous] //Ésta anotación está aquí porque la autorización no está implementada.
 [Route("/Api/Eventos")]
 public class EventosController : Controller {
     // EventosController.cs
@@ -25,12 +24,14 @@ public class EventosController : Controller {
         Contexto = contexto;
     }
 
+    [AllowAnonymous]
     [HttpGet("Lista")]
     public IActionResult VerTodos() {
         List<Evento> Eventos = Contexto.Eventos.ToList ();
         return Ok (Eventos);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> VerEvento([FromRoute] int id) {
         //Éste método carga la vista de detalles.
@@ -45,6 +46,7 @@ public class EventosController : Controller {
         }
     }
 
+    [Authorize(Policy = "Ministerio")]
     [HttpPost("Nuevo")]
     public async Task<IActionResult> NuevoEvento ([FromBody]Evento NuevoEvento) {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
@@ -81,6 +83,7 @@ public class EventosController : Controller {
         }
     }
 
+    [Authorize(Policy = "Ministerio")]
     [HttpPut("Editar")]
     public async Task<IActionResult> EditarEvento ([FromForm]Evento EventoEditado) {
         //Ésta función es para editar el evento como un todo.
@@ -118,7 +121,7 @@ public class EventosController : Controller {
         }
     }
 
-    [Authorize]
+    [Authorize(Policy = "Ministerio")]
     [HttpDelete("Borrar/{id}")]
     public IActionResult BorrarEvento ([FromRoute]int id) {
         //Es importante que haya una confirmación, como "¿Está seguro de borrar éste evento? Una vez hecho, no hay vuelta atrás." antes de acceder a éste endpoint.
