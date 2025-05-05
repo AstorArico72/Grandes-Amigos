@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +10,20 @@ builder.WebHost.UseUrls ("http://127.0.0.1:5020");
 builder.Services.AddMvc ();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddApiVersioning(config => {
+    config.DefaultApiVersion = new ApiVersion(0, 1);
+});
+builder.Services.AddSwaggerGen(options => {
+    options.SwaggerDoc ("v0.1", new Microsoft.OpenApi.Models.OpenApiInfo {
+        Version = "v0.1",
+        Title = "Grandes Amigos",
+        Description = "API para la plataforma Grandes Amigos, una plataforma web centralizada y fácil de usar que conecta a los adultos mayores con las diversas actividades y programas ofrecidos por los distintos ministerios, fomentando la participación, la interacción social y el bienestar."
+        //Pendiente: Completar documentación OpenAPI
+    });
+    options.EnableAnnotations ();
+    options.DocumentFilter<ReemplazaVersion>();
+    options.OperationFilter<QuitaVersion>();
+});
 builder.Services.AddDbContext<ContextoDb> (
     options => options.UseMySql (
         builder.Configuration ["ConnectionStrings:DefaultConnection"], new MariaDbServerVersion (new Version (10, 4, 21))
@@ -44,8 +58,11 @@ if (!app.Environment.IsDevelopment()) {
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 } else {
-    app.UseSwagger ();
-    app.UseSwaggerUI ();
+    app.UseSwagger (options => {
+        options.RouteTemplate = "api/docs/{documentName}/docs.json";
+    }).UseSwaggerUI (options => {
+        options.SwaggerEndpoint ($"/api/docs/v0.1/docs.json", "Grandes Amigos");
+    });
 }
 
 app.UseHttpsRedirection();

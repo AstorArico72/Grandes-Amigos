@@ -1,15 +1,14 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Grandes_Amigos.Api;
 
 [ApiController]
+[ApiVersionNeutral]
 [Route("/Api/Eventos")]
 public class EventosController : Controller {
     // EventosController.cs
@@ -26,6 +25,12 @@ public class EventosController : Controller {
 
     [AllowAnonymous]
     [HttpGet("Lista")]
+    [SwaggerOperation(
+        Summary = "Lista todos los eventos.",
+        Description = "Lee todas las entradas de la tabla `Eventos`."
+        )]
+    [SwaggerResponse(200, "Hay al menos una entrada en la tabla 'Eventos'.")]
+    [SwaggerResponse(204, "La tabla 'Eventos' está vacía.")]
     public IActionResult VerTodos() {
         List<Evento> Eventos = Contexto.Eventos.ToList ();
         return Ok (Eventos);
@@ -33,6 +38,12 @@ public class EventosController : Controller {
 
     [AllowAnonymous]
     [HttpGet("{id}")]
+    [SwaggerOperation(
+        Summary = "Retorna un evento.",
+        Description = "Toma el ID del evento de la ruta; y si un evento con ése ID existe en la base de datos, lo lee."
+        )]
+    [SwaggerResponse(200, "El evento existe en la base de datos.")]
+    [SwaggerResponse(404, "El evento no existe en la base de datos.")]
     public async Task<IActionResult> VerEvento([FromRoute] int id) {
         //Éste método carga la vista de detalles.
         //Es importante que las vistas de éste endpoint tengan un botón que enlace a /Inscripcion, con el ID del evento cargado en el querystring.
@@ -48,6 +59,14 @@ public class EventosController : Controller {
 
     [Authorize(Policy = "Ministerio")]
     [HttpPost("Nuevo")]
+    [SwaggerOperation(
+        Summary = "Crea un nuevo evento.",
+        Description = "Crea una entrada en la tabla `Eventos`, tomando el cuerpo del pedido como parámetro. Ve a `/Models/Evento.cs` para saber qué entra aquí."
+        )]
+    [SwaggerResponse(201, "Se cargó el nuevo evento a la base de datos exitosamente.")]
+    [SwaggerResponse(400, "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal.")]
+    [SwaggerResponse(401, "Se accedió sin autorización.")]
+    [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
     public async Task<IActionResult> NuevoEvento ([FromBody]Evento NuevoEvento) {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
 
@@ -85,6 +104,14 @@ public class EventosController : Controller {
 
     [Authorize(Policy = "Ministerio")]
     [HttpPut("Editar")]
+    [SwaggerOperation(
+        Summary = "Edita un evento.",
+        Description = "Tomando el cuerpo del pedido, edita una entrada de la tabla 'Eventos', donde el ID del evento coincida con el ID especificado en el cuerpo."
+        )]
+    [SwaggerResponse(200, "El evento fue actualizado en la base de datos con éxito.")]
+    [SwaggerResponse(400, "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal.")]
+    [SwaggerResponse(401, "Se accedió sin autorización.")]
+    [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
     public async Task<IActionResult> EditarEvento ([FromForm]Evento EventoEditado) {
         //Ésta función es para editar el evento como un todo.
         //Ésta función debería ser llamada desde un formulario parecido o idéntico al de crear eventos.
@@ -123,6 +150,14 @@ public class EventosController : Controller {
 
     [Authorize(Policy = "Ministerio")]
     [HttpDelete("Borrar/{id}")]
+    [SwaggerOperation(
+        Summary = "Borra un evento.",
+        Description = "Borra una entrada de la tabla 'Eventos' tomando el ID de la ruta como parámetro. Si el evento existe, es borrado."
+        )]
+    [SwaggerResponse(200, "El evento fué borrado con éxito.")]
+    [SwaggerResponse(401, "Se accedió sin autorización.")]
+    [SwaggerResponse(400, "El evento seleccionado no existe, es decir, el ID es inválido.")]
+    [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
     public IActionResult BorrarEvento ([FromRoute]int id) {
         //Es importante que haya una confirmación, como "¿Está seguro de borrar éste evento? Una vez hecho, no hay vuelta atrás." antes de acceder a éste endpoint.
         Evento? EventoSeleccionado = Contexto.Eventos.Find (id);

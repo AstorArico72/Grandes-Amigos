@@ -7,8 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
+using Swashbuckle.AspNetCore.Annotations;
 
 [ApiController]
+[ApiVersionNeutral]
 [Route("/Api/Usuarios")]
 public class UsuariosController : Controller {
     private ContextoDb Contexto;
@@ -21,6 +23,13 @@ public class UsuariosController : Controller {
 
     [AllowAnonymous]
     [HttpPost("Nuevo")]
+    [SwaggerOperation (
+        Summary = "Crea un nuevo usuario.",
+        Description = "Crea una nueva entrada en la tabla `Usuarios`. La contraseña no es guardada de forma textual, sino que se convierte a un `hash`."
+    )]
+    [SwaggerResponse (201, "El usuario fue creado con éxito.")]
+    [SwaggerResponse (400, "Un campo está vacío o es inválido.")]
+    [SwaggerResponse (500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
     public async Task<IActionResult> NuevoUsuario ([FromForm] Usuario NuevoUsuario) {
         try {
             if (ModelState.IsValid) {
@@ -44,6 +53,12 @@ public class UsuariosController : Controller {
 
     [AllowAnonymous]
     [HttpPost("Ingresar")]
+    [SwaggerOperation (
+        Summary = "Inicia sesión.",
+        Description = "Si el nombre de usuario es válido y la contraseña corresponde al usuario con ése nombre, genera un `JsonWebToken` que será utilizado para acceder a ciertos endpoints protegidos."
+        )]
+    [SwaggerResponse (200, "Se ha iniciado la sesión.")]
+    [SwaggerResponse (400, "El nombre de usuario o la clave es incorrecto.")]
     public async Task<IActionResult> IniciarSesión ([FromForm] LoginView LoginData) {
         Usuario? UsuarioSeleccionado = await Contexto.Usuarios.FirstOrDefaultAsync (usuario => usuario.NombreUsuario == LoginData.NombreUsuario);
         string ContraseñaConHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
