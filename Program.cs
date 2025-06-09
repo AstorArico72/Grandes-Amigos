@@ -55,6 +55,9 @@ builder
                 IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
                     System.Text.Encoding.UTF8.GetBytes(
                         builder.Configuration["TokenAuthentication:SecretKey"]
+                            ?? throw new InvalidOperationException(
+                                "TokenAuthentication:SecretKey is not configured."
+                            )
                     )
                 ),
             };
