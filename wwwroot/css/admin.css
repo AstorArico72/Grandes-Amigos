@@ -1,0 +1,36 @@
+/* admin.css */
+:root {
+	--celeste-claro: #aee0f4;
+	--celeste: #49abc3;
+	--azul-profundo: #11497c;
+
+	--blanco: #ffffff;
+	--gris-claro: #f8f9fa;
+}
+
+body {
+	font-family: 'Montserrat', sans-serif;
+}
+
+.sidebar-admin {
+	width: 280px;
+	background-color: var(--azul-profundo);
+	min-height: 100vh;
+}
+
+.sidebar-admin a {
+	color: var(--blanco);
+	text-decoration: none;
+}
+
+.sidebar-admin a:hover {
+	background-color: #0d3a6c;
+}
+
+.navbar-admin {
+	background-color: var(--celeste);
+}
+
+.navbar-admin .nav-link {
+	color: var(--blanco);
+}
