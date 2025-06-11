@@ -5,16 +5,22 @@ namespace Grandes_Amigos.Controllers
     [Route("Admin")]
     public class AdminController : Controller
     {
-        [HttpGet("Login")]
+        [HttpGet("Login")] // 👈 este permite mostrar el formulario
         public IActionResult Login()
         {
-            return View(); // libre para que el usuario pueda ingresar sus credenciales hasta que este listo el panel
+            return View();
         }
 
-        [HttpPost("Login")]
+        [HttpPost("Login")] // 👈 este procesa el formulario
         public IActionResult Login(string username, string password)
         {
-            return RedirectToAction("Dashboard");
+            if (username == "admin" && password == "1234")
+            {
+                return RedirectToAction("Dashboard");
+            }
+
+            ViewBag.Error = "Credenciales inválidas";
+            return View();
         }
 
         [HttpGet("Dashboard")]
