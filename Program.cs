@@ -76,6 +76,9 @@ builder.Services.AddAuthorization(options =>
     );
 });
 
+// Configuración de servicios para la inyección de dependencias
+builder.Services.AddScoped<INoticiaService, NoticiaService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
