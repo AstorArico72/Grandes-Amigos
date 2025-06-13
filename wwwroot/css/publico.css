@@ -1,16 +1,14 @@
-#que-es h2 {
-	color: var(--azul-profundo);
+:root {
+	--celeste-claro: #aee0f4;
+	--turquesa: #49abc3;
+	--azul-profundo: #11497c;
+
+	--fuente-base: 'Roboto', sans-serif;
 }
 
-.list-group-item {
+body {
+	font-family: var(--fuente-base);
+	background-color: #fff;
+	color: #222;
 	font-size: 1.1rem;
-}
-
-footer {
-	font-size: 0.95rem;
-	background-color: var(--azul-profundo);
-}
-footer h5,
-footer h6 {
-	color: var(--celeste);
 }
