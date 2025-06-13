@@ -1,0 +1,25 @@
+@model Grandes_Amigos.Models.Evento
+
+@{
+    var numero = ViewData["EncuentroNro"]?.ToString() ?? "#";
+}
+
+<div class="d-flex align-items-center bg-info bg-opacity-75 rounded p-3 gap-3 shadow-sm text-white">
+    <div class="bg-white text-center text-primary rounded-3 px-3 py-2" style="min-width: 80px;">
+        <div class="fw-bold fs-5">@numero&#186;</div>
+        <small class="text-uppercase fw-bold">Encuentro</small>
+    </div>
+    <div class="flex-grow-1">
+        <div class="fw-bold">
+            <i class="bi bi-clock me-1"></i>
+            @Model.Fecha.ToString("dd 'de' MMMM", new System.Globalization.CultureInfo("es-ES")).ToUpper()
+        </div>
+        <div>
+            <strong>Departamento:</strong> Ministerio ID @Model.ID_Ministerio
+        </div>
+        <div>
+            <i class="bi bi-geo-alt-fill me-1"></i>
+            @Model.Título
+        </div>
+    </div>
+</div>

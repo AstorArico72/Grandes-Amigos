@@ -12,3 +12,17 @@ body {
 	color: #222;
 	font-size: 1.1rem;
 }
+
+/* Estilo fijo para los botones del header */
+.header-btn {
+	background-color: #ffffff;
+	color: #11497c;
+	border: 2px solid #ffffff;
+	font-weight: 600;
+	transition: background-color 0.3s ease;
+}
+
+.header-btn:hover {
+	background-color: #aee0f4; /* celeste claro */
+	color: #11497c; /* mantener contraste legible */
+}

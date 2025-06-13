@@ -1,4 +1,4 @@
-@model Grandes_Amigos.Models.ViewModels.NoticiasViewModel
+@model Grandes_Amigos.Models.ViewModels.HomeViewModel
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -12,7 +12,9 @@
 @await Html.PartialAsync("~/Views/Public/Partials/news/NoticiasDeporte.cshtml", Model.Deporte)
 @await Html.PartialAsync("~/Views/Public/Partials/EventosDestacados.cshtml")
 @await Html.PartialAsync("~/Views/Public/Partials/news/NoticiasCultura.cshtml", Model.Cultura)
-@await Html.PartialAsync("~/Views/Public/Partials/ListadoDeEventos.cshtml")
+@await Html.PartialAsync("~/Views/Public/Partials/ListadoDeEventos.cshtml", Model.Eventos)
+
+
 
 
 
