@@ -45,3 +45,113 @@ body {
 	background-color: var(--azul-profundo) !important;
 	color: #fff;
 }
+
+.main-header {
+	position: sticky;
+	top: 0;
+	z-index: 1020; /* mayor a otros elementos */
+	background-color: #11497c; /* para evitar transparencia al hacer scroll */
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* efecto de sombra al separarse */
+}
+/* Sección "¿Qué es Grandes Amigos?" */
+.seccion-que-es {
+	background-color: var(--turquesa);
+	position: relative;
+	overflow: hidden;
+	padding: 3rem 0;
+}
+
+.seccion-que-es .titulo-ovalo {
+	background-color: white;
+	color: var(--turquesa);
+	border-radius: 50px;
+	font-size: 2rem;
+	padding: 0.5rem 2rem;
+	display: inline-block;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+/* Sección "Actividades por Ministerio" */
+.seccion-ministerios {
+	background-color: var(--turquesa);
+	position: relative;
+	overflow: hidden;
+	padding: 3rem 0;
+}
+
+.seccion-ministerios .titulo-ovalo {
+	background-color: white;
+	color: var(--turquesa);
+	border-radius: 50px;
+	font-size: 2rem;
+	padding: 0.5rem 2rem;
+	display: inline-block;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+.seccion-eventos-destacados {
+	background-color: var(--turquesa);
+	position: relative;
+	overflow: hidden;
+	padding: 3rem 0;
+}
+
+.seccion-eventos-destacados .titulo-ovalo {
+	background-color: white;
+	color: var(--turquesa);
+	border-radius: 50px;
+	font-size: 2rem;
+	padding: 0.5rem 2rem;
+	display: inline-block;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+.seccion-listado-eventos {
+	background-color: var(--turquesa);
+	position: relative;
+	overflow: hidden;
+	padding: 3rem 0;
+}
+
+.seccion-listado-eventos .titulo-ovalo {
+	background-color: white;
+	color: var(--turquesa);
+	border-radius: 50px;
+	font-size: 2rem;
+	padding: 0.5rem 2rem;
+	display: inline-block;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+.seccion-mapa {
+	background-color: var(--turquesa);
+	position: relative;
+	overflow: hidden;
+	padding: 3rem 0;
+}
+
+.seccion-mapa .titulo-ovalo {
+	background-color: white;
+	color: var(--turquesa);
+	border-radius: 50px;
+	font-size: 2rem;
+	padding: 0.5rem 2rem;
+	display: inline-block;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+
+.seccion-animada {
+	opacity: 0;
+	transform: translateY(50px);
+	transition: all 0.6s ease-in-out;
+}
+
+.seccion-visible {
+	opacity: 1;
+	transform: translateY(0);
+}

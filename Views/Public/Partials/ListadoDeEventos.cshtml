@@ -1,9 +1,10 @@
 @model IEnumerable<Grandes_Amigos.Models.Evento>
 
-<section style="background-color: #4cacca;" class="py-5" id="eventos">
-    <div class="container">
-        <h2 class="mb-4 text-center text-uppercase text-primary fw-bold text-white">Listado de Eventos</h2>
-        <div class="row row-cols-1 row-cols-md-2 g-4">
+<section id="eventos" class="seccion-listado-eventos seccion-animada">
+    <div class="container text-center">
+        <h2 class="titulo-ovalo">Listado de Eventos</h2>
+
+        <div class="row row-cols-1 row-cols-md-2 g-4 mt-4 text-start">
             @{
                 int contador = 1;
             }

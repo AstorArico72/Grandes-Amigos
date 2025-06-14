@@ -1,13 +1,13 @@
 @model List<Grandes_Amigos.Models.Noticia>
 
-<section class="py-5">
+<section class="py-5 seccion-animada">
     <div class="container">
         <div class="row row-cols-1 row-cols-md-3 g-4">
             @foreach (var noticia in Model)
             {
                 @await Html.PartialAsync("~/Views/Public/Partials/news/Card.cshtml", noticia)
-
             }
         </div>
     </div>
 </section>
+
