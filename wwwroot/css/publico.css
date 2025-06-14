@@ -11,6 +11,12 @@ body {
 	background-color: #fff;
 	color: #222;
 	font-size: 1.1rem;
+
+	background-image: url('/img/fondo.png');
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: center;
 }
 
 /* Estilo fijo para los botones del header */
@@ -25,4 +31,17 @@ body {
 .header-btn:hover {
 	background-color: #aee0f4; /* celeste claro */
 	color: #11497c; /* mantener contraste legible */
+}
+
+.main-con-fondo {
+	background-image: url('/img/fondo.png');
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-attachment: fixed;
+}
+
+.bg-azul-profundo {
+	background-color: var(--azul-profundo) !important;
+	color: #fff;
 }
