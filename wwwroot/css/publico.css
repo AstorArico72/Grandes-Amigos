@@ -5,7 +5,15 @@
 
 	--fuente-base: 'Roboto', sans-serif;
 }
+* {
+	box-sizing: border-box;
+}
 
+html,
+body {
+	width: 100%;
+	overflow-x: hidden;
+}
 body {
 	font-family: var(--fuente-base);
 	background-color: #fff;
@@ -17,6 +25,32 @@ body {
 	background-repeat: no-repeat;
 	background-attachment: fixed;
 	background-position: center;
+}
+
+#hero-inicio {
+	background-image: url('https://cdn.fs.teachablecdn.com/0XLydLzBQr6eJfNwsZTo');
+	background-size: cover;
+	background-position: center;
+	height: 90vh;
+}
+
+#hero-inicio {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+	display: block;
+}
+
+.img-central {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 /* Estilo fijo para los botones del header */
@@ -47,12 +81,14 @@ body {
 }
 
 .main-header {
-	position: sticky;
+	position: fixed;
 	top: 0;
-	z-index: 1020; /* mayor a otros elementos */
-	background-color: #11497c; /* para evitar transparencia al hacer scroll */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* efecto de sombra al separarse */
+	width: 100%;
+	z-index: 1050;
+	background-color: #11497c;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 /* Sección "¿Qué es Grandes Amigos?" */
 .seccion-que-es {
 	background-color: var(--turquesa);
@@ -154,4 +190,39 @@ body {
 .seccion-visible {
 	opacity: 1;
 	transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+	body {
+		background-attachment: scroll;
+	}
+	#hero-inicio {
+		height: 20vh; /* o incluso 40vh si querés más chico */
+	}
+	.titulo-ovalo {
+		font-size: 1.3rem;
+		padding: 0.3rem 1rem;
+	}
+
+	.card-title {
+		font-size: 1.1rem;
+	}
+
+	.card-text {
+		font-size: 0.95rem;
+	}
+
+	.seccion-que-es p,
+	.seccion-ministerios p,
+	.seccion-eventos-destacados p {
+		font-size: 1rem;
+		text-align: justify;
+	}
+
+	.carousel-control-prev-icon,
+	.carousel-control-next-icon {
+		width: 2rem;
+		height: 2rem;
+		filter: invert(100%);
+	}
 }
