@@ -86,7 +86,10 @@ public class UsuariosController : Controller {
                 expires: DateTime.Now.AddHours (24),
                 signingCredentials: Credenciales
             );
-            return Ok (new JwtSecurityTokenHandler ().WriteToken (Token));
+
+            Request.Headers.Authorization = new JwtSecurityTokenHandler().WriteToken(Token);
+
+            return RedirectToAction("Dashboard", "Admin");
         }
     }
 }

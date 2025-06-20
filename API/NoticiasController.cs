@@ -22,7 +22,6 @@ public class NoticiasController : Controller {
     public NoticiasController(ILogger<NoticiasController> logger, ContextoDb contexto) {
         _logger = logger;
         Contexto = contexto;
-        LectorRSS = XmlReader.Create ("https://www.example.net/rss");
     }
 
     [AllowAnonymous]
@@ -42,8 +41,8 @@ public class NoticiasController : Controller {
         }
     }
 
-    [AllowAnonymous]
-    [HttpPost("Cargar")]
+    [HttpGet("Cargar")]
+    [Authorize(Policy = "Ministerio")]
     [SwaggerOperation(
         Summary = "Carga noticias a la base de datos.",
         Description = "Ésto lee el contenido de un archivo RSS y lo carga en la base de datos, artículo por artículo. Ésto sólo carga los artículos de la última hora."
@@ -54,6 +53,7 @@ public class NoticiasController : Controller {
     [SwaggerResponse(502, "El servidor de noticias está caído o devolvió una respuesta inválida.")]
     public IActionResult CargarNoticias () {
         //Ésto hace un pedido preliminar al proveedor del RSS remoto, para evitar gastar recursos en cargar las noticias si pasa un error.
+        LectorRSS = XmlReader.Create ("https://www.lanacion.com.ar/arc/outboundfeeds/rss/");
         HttpClient client = new HttpClient ();
         HttpRequestMessage message = new HttpRequestMessage ();
         message.Method = HttpMethod.Get;
@@ -110,7 +110,7 @@ public class NoticiasController : Controller {
                 foreach (var autor in Autores) {
                     //En la teoría debería ser así.
                     //NombresAutor.Add (autor.Name);
-                    NombresAutor.Add (autor.Email); //Pero funciona así para el RSS de Perfil.
+                    NombresAutor.Add (autor.Name); //Pero funciona así para el RSS de Perfil.
                 }
 
                 if (Autores.Count > 1) {
@@ -137,7 +137,7 @@ public class NoticiasController : Controller {
         if (exito == false) {
             return StatusCode (500, "Error interno.");
         } else {
-            return Created ();
+            return Ok ();
         }
     }
 }

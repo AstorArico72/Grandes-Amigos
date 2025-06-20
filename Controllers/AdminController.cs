@@ -11,6 +11,7 @@ namespace Grandes_Amigos.Controllers
             return View();
         }
 
+        [Obsolete ("Reemplazado por /Api/Usuarios/Login, pero guardado por si acaso.")]
         [HttpPost("Login")] // 👈 este procesa el formulario
         public IActionResult Login(string username, string password)
         {
