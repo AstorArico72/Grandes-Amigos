@@ -74,6 +74,12 @@ builder.Services.AddAuthorization(options =>
             policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
         }
     );
+    options.AddPolicy("Usuario", policy => {
+        //Pendiente: Acordar un nombre para ésta política.
+        policy.RequireRole("Usuario");
+        policy.RequireClaim(ClaimTypes.Role, "Usuario");
+        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+    });
 });
 
 // Configuración de servicios para la inyección de dependencias

@@ -67,7 +67,7 @@ public class EventosController : Controller {
     [SwaggerResponse(400, "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal.")]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> NuevoEvento ([FromBody]Evento NuevoEvento) {
+    public async Task<IActionResult> NuevoEvento ([FromForm]Evento NuevoEvento) {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
 
         Ministerio? ministerio = await Contexto.Ministerios.FindAsync (NuevoEvento.ID_Ministerio);

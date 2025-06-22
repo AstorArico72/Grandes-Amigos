@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grandes_Amigos.Models;
+//Pendiente: Cambiar el nombre de ésta tabla. Creo que el nombre "Inscritos" no refleja la función.
 
 public class Inscrito {
     [Key]
@@ -39,6 +40,9 @@ public class Inscrito {
     [Required(ErrorMessage = "Es necesario registrarse con nombre y apellido.", AllowEmptyStrings = false)]
     //Pendiente: Consultar si es necesario separar nombre de apellido.
     public string Nombre {get; set;}
+    [Required(ErrorMessage = "Es necesario usar una clave.", AllowEmptyStrings = false)]
+    //Pendiente: Consultar si es necesario separar nombre de apellido.
+    public string Clave {get; set;}
 
     // ✔ Constructor requerido por EF Core
     public Inscrito() { }

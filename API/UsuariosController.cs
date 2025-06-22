@@ -59,7 +59,7 @@ public class UsuariosController : Controller {
         )]
     [SwaggerResponse (200, "Se ha iniciado la sesión.")]
     [SwaggerResponse (400, "El nombre de usuario o la clave es incorrecto.")]
-    public async Task<IActionResult> IniciarSesión ([FromForm] LoginView LoginData) {
+    public async Task<IActionResult> IniciarSesiónAdmin ([FromForm] LoginView LoginData) {
         Usuario? UsuarioSeleccionado = await Contexto.Usuarios.FirstOrDefaultAsync (usuario => usuario.NombreUsuario == LoginData.NombreUsuario);
         string ContraseñaConHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
 			password: LoginData.Clave,
