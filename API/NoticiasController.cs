@@ -48,7 +48,7 @@ public class NoticiasController : Controller
     }
 
     [HttpGet("Cargar")]
-    [Authorize(Policy = "Ministerio")]
+    //[Authorize(Policy = "Ministerio")]
     [SwaggerOperation(
         Summary = "Carga noticias a la base de datos.",
         Description = "Ésto lee el contenido de un archivo RSS y lo carga en la base de datos, artículo por artículo. Ésto sólo carga los artículos de la última hora."
@@ -127,9 +127,7 @@ public class NoticiasController : Controller
 
                 foreach (var autor in Autores)
                 {
-                    //En la teoría debería ser así.
-                    //NombresAutor.Add (autor.Name);
-                    NombresAutor.Add(autor.Name); //Pero funciona así para el RSS de Perfil.
+                    NombresAutor.Add(autor.Name);
                 }
 
                 if (Autores.Count > 1)
@@ -138,13 +136,56 @@ public class NoticiasController : Controller
                 }
                 else
                 {
-                    NuevaNoticia.Autor = NombresAutor.First();
+                    // Autor seguro
+                    if (NombresAutor.Count > 0)
+                        NuevaNoticia.Autor = NombresAutor.First();
+                    else
+                        NuevaNoticia.Autor = "Desconocido";
                 }
 
-                NuevaNoticia.Enlace = item.Links.First().Uri.AbsoluteUri;
+                // Enlace seguro
+                if (item.Links.Any())
+                    NuevaNoticia.Enlace = item.Links.First().Uri.AbsoluteUri;
+                else
+                    NuevaNoticia.Enlace = "";
+
+                if (item.Categories.Any())
+                    NuevaNoticia.Categoria = item.Categories.First().Name;
+                else
+                    NuevaNoticia.Categoria = "General";
+
                 NuevaNoticia.FechaPublicación = item.PublishDate.DateTime;
                 NuevaNoticia.Título = item.Title.Text;
                 NuevaNoticia.Contenido = item.Summary.Text;
+
+                // EXTRAER IMAGEN
+                string? imagenUrl = null;
+
+                // 1. Buscar en extensiones media:content o media:thumbnail
+                var media = item.ElementExtensions.FirstOrDefault(e =>
+                    e.OuterName == "content" || e.OuterName == "thumbnail"
+                );
+                if (media != null)
+                {
+                    var attr = media.GetObject<XElement>().Attribute("url");
+                    if (attr != null)
+                        imagenUrl = attr.Value;
+                }
+
+                // 2. Si no hay extensión, buscar en el contenido HTML
+                if (imagenUrl == null && item.Summary != null)
+                {
+                    var html = item.Summary.Text;
+                    var match = System.Text.RegularExpressions.Regex.Match(
+                        html,
+                        "<img.+?src=[\"'](.+?)[\"']"
+                    );
+                    if (match.Success)
+                        imagenUrl = match.Groups[1].Value;
+                }
+
+                NuevaNoticia.ImagenUrl = imagenUrl;
+
                 if (ModelState.IsValid)
                 {
                     Contexto.Noticias.Add(NuevaNoticia);

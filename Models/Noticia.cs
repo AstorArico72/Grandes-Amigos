@@ -10,14 +10,19 @@ public class Noticia
     public int ID { get; set; }
 
     [Required]
-    public string Título { get; set; }
-    public string Contenido { get; set; }
+    public string? Título { get; set; }
+    public string? Contenido { get; set; }
 
     [Required]
-    public string Autor { get; set; }
+    public string? Autor { get; set; }
 
     [Required]
-    public string Enlace { get; set; }
+    public string? Categoria { get; set; } // Nueva propiedad para categorizar
+
+    [Required]
+    public string? Enlace { get; set; }
+
+    public string? ImagenUrl { get; set; }
 
     [Required]
     [Column("Fecha_Publicación")]

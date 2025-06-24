@@ -2,6 +2,10 @@
 
 <div class="col seccion-animada">
     <div class="card h-100 shadow-sm">
+        @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+        {
+            <img src="@Model.ImagenUrl" class="card-img-top" alt="Imagen de la noticia" style="object-fit:cover;max-height:220px;">
+        }
         <div class="card-body">
             <h5 class="card-title">@Model.Título</h5>
             <p class="card-text">@Model.Contenido</p>
