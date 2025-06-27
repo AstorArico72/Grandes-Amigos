@@ -1,13 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
-using MySqlConnector;
-using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
+using MySqlConnector;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Grandes_Amigos.Api;
 
@@ -24,7 +24,11 @@ public class InscritosController : Controller
     private readonly IConfiguration Config;
     private ContextoDb Contexto;
 
-    public InscritosController(ILogger<InscritosController> logger, ContextoDb contexto, IConfiguration ajustes)
+    public InscritosController(
+        ILogger<InscritosController> logger,
+        ContextoDb contexto,
+        IConfiguration ajustes
+    )
     {
         _logger = logger;
         Contexto = contexto;
@@ -36,7 +40,7 @@ public class InscritosController : Controller
     [SwaggerOperation(
         Summary = "Lista todos los inscritos.",
         Description = "Lee todas las entradas de la tabla `Inscritos`."
-        )]
+    )]
     [SwaggerResponse(200, "Hay al menos una entrada en la tabla `Inscritos`.")]
     [SwaggerResponse(204, "La tabla `Inscritos` está vacía.")]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
@@ -51,7 +55,7 @@ public class InscritosController : Controller
     [SwaggerOperation(
         Summary = "Retorna un inscrito.",
         Description = "Toma el ID del inscrito de la ruta; y si un inscrito con ése ID existe en la base de datos, lo lee."
-        )]
+    )]
     [SwaggerResponse(200, "El inscrito existe en la base de datos.")]
     [SwaggerResponse(404, "El inscrito no existe en la base de datos.")]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
@@ -75,7 +79,10 @@ public class InscritosController : Controller
         Description = "Crea una entrada en la tabla `Inscritos`, tomando el cuerpo del pedido como parámetro. Ve a `/Models/Inscrito.cs` para saber qué entra aquí."
     )]
     [SwaggerResponse(201, "Se cargó el nuevo inscrito a la base de datos exitosamente.")]
-    [SwaggerResponse(400, "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal.")]
+    [SwaggerResponse(
+        400,
+        "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal."
+    )]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
     public async Task<IActionResult> NuevoInscrito([FromForm] Inscrito NuevoInscrito)
@@ -84,13 +91,15 @@ public class InscritosController : Controller
         {
             if (ModelState.IsValid)
             {
-                NuevoInscrito.Clave = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                    password: NuevoInscrito.Clave,
-                    salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
-                    prf: KeyDerivationPrf.HMACSHA256,
-                    iterationCount: 4096,
-                    numBytesRequested: 256 / 8
-                ));
+                NuevoInscrito.Clave = Convert.ToBase64String(
+                    KeyDerivation.Pbkdf2(
+                        password: NuevoInscrito.Clave,
+                        salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
+                        prf: KeyDerivationPrf.HMACSHA256,
+                        iterationCount: 4096,
+                        numBytesRequested: 256 / 8
+                    )
+                );
                 Contexto.Inscritos.Add(NuevoInscrito);
                 await Contexto.SaveChangesAsync();
                 return Created(); //Pendiente: Crear una vista que informe que la creación de la cuenta fué exitosa.
@@ -103,7 +112,9 @@ public class InscritosController : Controller
                 {
                     ErroresModelo.Add(item.ErrorMessage);
                 }
-                return BadRequest("Estado de modelo inválido:\n" + string.Join("\n", ErroresModelo));
+                return BadRequest(
+                    "Estado de modelo inválido:\n" + string.Join("\n", ErroresModelo)
+                );
             }
         }
         catch (MySqlException ex)
@@ -117,7 +128,7 @@ public class InscritosController : Controller
     [SwaggerOperation(
         Summary = "Borra un inscrito.",
         Description = "Borra una entrada de la tabla 'Inscritos' tomando el ID de la ruta como parámetro. Si el inscrito existe, es borrado."
-        )]
+    )]
     [SwaggerResponse(200, "El inscrito fué borrado con éxito.")]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(400, "El inscrito seleccionado no existe, es decir, el ID es inválido.")]
@@ -143,40 +154,53 @@ public class InscritosController : Controller
             return BadRequest("El inscrito seleccionado no existe.");
         }
     }
-    
+
     [AllowAnonymous]
     [HttpPost("Login")]
-    [SwaggerOperation (
+    [SwaggerOperation(
         Summary = "Inicia la sesión.",
         Description = "Si el nombre de usuario es válido y la contraseña corresponde al usuario con ése nombre, genera un `JsonWebToken` que será utilizado para acceder a ciertos endpoints."
-        )]
-    [SwaggerResponse (200, "Se ha iniciado la sesión.")]
-    [SwaggerResponse (400, "El nombre de usuario o la clave es incorrecto.")]
-    public async Task<IActionResult> IniciarSesiónInscrito ([FromForm] LoginView LoginData) {
+    )]
+    [SwaggerResponse(200, "Se ha iniciado la sesión.")]
+    [SwaggerResponse(400, "El nombre de usuario o la clave es incorrecto.")]
+    public async Task<IActionResult> IniciarSesiónInscrito([FromForm] LoginView LoginData)
+    {
         // Nota: Ésto usa el mismo LoginData que /Usuarios/Ingresar.
-        Inscrito? UsuarioSeleccionado = await Contexto.Inscritos.FirstOrDefaultAsync (usuario => usuario.Nombre == LoginData.NombreUsuario);
-        string ContraseñaConHash = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-			password: LoginData.Clave,
-			salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
-			prf: KeyDerivationPrf.HMACSHA256,
-			iterationCount: 4096,
-			numBytesRequested: 256 / 8
-        ));
-        var Llave = new SymmetricSecurityKey (System.Text.Encoding.UTF8.GetBytes(Config["TokenAuthentication:SecretKey"]));
-        var Credenciales = new SigningCredentials (Llave, SecurityAlgorithms.HmacSha256);
-        if (UsuarioSeleccionado == null || ContraseñaConHash != UsuarioSeleccionado.Clave) {
-            return BadRequest ("Usuario o clave incorrectos.");
-        } else {
-            Claim ClaimNombre = new Claim (ClaimTypes.Name, UsuarioSeleccionado.Nombre);
-            Claim ClaimIdUsuario = new Claim ("IdUsuario", UsuarioSeleccionado.NumDocumento.ToString ());
-            Claim ClaimRol = new Claim (ClaimTypes.Role, "Usuario");
-            List<Claim> ClaimList = new List<Claim> ([ClaimNombre, ClaimIdUsuario, ClaimRol]);
+        Inscrito? UsuarioSeleccionado = await Contexto.Inscritos.FirstOrDefaultAsync(usuario =>
+            usuario.Nombre == LoginData.NombreUsuario
+        );
+        string ContraseñaConHash = Convert.ToBase64String(
+            KeyDerivation.Pbkdf2(
+                password: LoginData.Clave,
+                salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 4096,
+                numBytesRequested: 256 / 8
+            )
+        );
+        var Llave = new SymmetricSecurityKey(
+            System.Text.Encoding.UTF8.GetBytes(Config["TokenAuthentication:SecretKey"])
+        );
+        var Credenciales = new SigningCredentials(Llave, SecurityAlgorithms.HmacSha256);
+        if (UsuarioSeleccionado == null || ContraseñaConHash != UsuarioSeleccionado.Clave)
+        {
+            return BadRequest("Usuario o clave incorrectos.");
+        }
+        else
+        {
+            Claim ClaimNombre = new Claim(ClaimTypes.Name, UsuarioSeleccionado.Nombre);
+            Claim ClaimIdUsuario = new Claim(
+                "IdUsuario",
+                UsuarioSeleccionado.NumDocumento.ToString()
+            );
+            Claim ClaimRol = new Claim(ClaimTypes.Role, "Usuario");
+            List<Claim> ClaimList = new List<Claim>([ClaimNombre, ClaimIdUsuario, ClaimRol]);
 
-            var Token = new JwtSecurityToken (
+            var Token = new JwtSecurityToken(
                 issuer: Config["TokenAuthentication:Issuer"],
                 audience: Config["TokenAuthentication:Audience"],
                 claims: ClaimList,
-                expires: DateTime.Now.AddHours (24),
+                expires: DateTime.Now.AddHours(24),
                 signingCredentials: Credenciales
             );
 

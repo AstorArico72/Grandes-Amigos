@@ -3,23 +3,30 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace Grandes_Amigos.Models;
+
 //Pendiente: Cambiar el nombre de ésta tabla. Creo que el nombre "Inscritos" no refleja la función.
 
-public class Inscrito {
+public class Inscrito
+{
     [Key]
     [Required(ErrorMessage = "Es necesario el número de documento.", AllowEmptyStrings = false)]
     [Column("Num_Documento")]
-    public int NumDocumento {get; set;}
+    public int NumDocumento { get; set; }
 
-    [Required(ErrorMessage = "Es necesario indicar el tipo de documento.", AllowEmptyStrings = false)]
+    [Required(
+        ErrorMessage = "Es necesario indicar el tipo de documento.",
+        AllowEmptyStrings = false
+    )]
     [StringLength(maximumLength: 3, MinimumLength = 2)]
     [Column("Tipo_Documento")]
-
-    public string TipoDocumento {get; set;}
+    public string TipoDocumento { get; set; }
 
     //Pendiente: Consultar cuáles campos son obligatorios, si el correo o el teléfono.
-    [Required(ErrorMessage = "Es necesaria una dirección de correo electrónico.", AllowEmptyStrings = false)]
-    public string Correo {get; set;}
+    [Required(
+        ErrorMessage = "Es necesaria una dirección de correo electrónico.",
+        AllowEmptyStrings = false
+    )]
+    public string Correo { get; set; }
 
     [Required(ErrorMessage = "Es necesario un número de teléfono.")]
     /* Explicación de los límites en los números:
@@ -32,23 +39,38 @@ public class Inscrito {
     * Pendiente: Consultar en qué formato guardar los números de teléfono, y diseñar el formulario de inscripción con ése detalle.
     */
     [StringLength(maximumLength: 14, MinimumLength = 10)]
-    public string Teléfono {get; set;}
+    public string Teléfono { get; set; }
 
-    [Required(ErrorMessage = "Es necesario estar registrado en una asociación.", AllowEmptyStrings = false)]
-    public string Asociación {get; set;}
+    [Required(
+        ErrorMessage = "Es necesario estar registrado en una asociación.",
+        AllowEmptyStrings = false
+    )]
+    public string Asociación { get; set; }
 
-    [Required(ErrorMessage = "Es necesario registrarse con nombre y apellido.", AllowEmptyStrings = false)]
+    [Required(
+        ErrorMessage = "Es necesario registrarse con nombre y apellido.",
+        AllowEmptyStrings = false
+    )]
     //Pendiente: Consultar si es necesario separar nombre de apellido.
-    public string Nombre {get; set;}
+    public string Nombre { get; set; }
+
     [Required(ErrorMessage = "Es necesario usar una clave.", AllowEmptyStrings = false)]
     //Pendiente: Consultar si es necesario separar nombre de apellido.
-    public string Clave {get; set;}
+    public string Clave { get; set; }
 
     // ✔ Constructor requerido por EF Core
     public Inscrito() { }
 
     // ✔ Constructor personalizado opcional
-    public Inscrito(int documento, string nombre, string tipoDocumento, string correo, string telefono, string asociacion) {
+    public Inscrito(
+        int documento,
+        string nombre,
+        string tipoDocumento,
+        string correo,
+        string telefono,
+        string asociacion
+    )
+    {
         NumDocumento = documento;
         TipoDocumento = tipoDocumento;
         Nombre = nombre;
