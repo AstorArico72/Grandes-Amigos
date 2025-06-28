@@ -1,121 +1,86 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
+using System.Security.Cryptography;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using MySqlConnector;
-using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.Extensions.Configuration;
 
 [ApiController]
 [ApiVersionNeutral]
-[Route("/Api/Usuarios")]
-public class UsuariosController : Controller
+[Route("/Api/Usuario")]
+public class InscritosController : Controller
 {
-    private ContextoDb Contexto;
+    private readonly ContextoDb Contexto;
     private readonly IConfiguration Config;
 
-    public UsuariosController(ContextoDb contexto, IConfiguration ajustes)
+    public InscritosController(ContextoDb contexto, IConfiguration config)
     {
         Contexto = contexto;
-        Config = ajustes;
+        Config = config;
     }
 
     [AllowAnonymous]
     [HttpPost("Nuevo")]
-    [SwaggerOperation(
-        Summary = "Crea un nuevo usuario.",
-        Description = "Crea una nueva entrada en la tabla `Usuarios`. La contraseña no es guardada de forma textual, sino que se convierte a un `hash`."
-    )]
-    [SwaggerResponse(201, "El usuario fue creado con éxito.")]
-    [SwaggerResponse(400, "Un campo está vacío o es inválido.")]
-    [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> NuevoUsuario([FromForm] Usuario NuevoUsuario)
+    public async Task<IActionResult> RegistrarInscrito([FromForm] Inscrito nuevo)
     {
+        if (!ModelState.IsValid)
+            return BadRequest("Faltan datos requeridos.");
+
         try
         {
-            if (ModelState.IsValid)
-            {
-                NuevoUsuario.Clave = Convert.ToBase64String(
-                    KeyDerivation.Pbkdf2(
-                        password: NuevoUsuario.Clave,
-                        salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
-                        prf: KeyDerivationPrf.HMACSHA256,
-                        iterationCount: 4096,
-                        numBytesRequested: 256 / 8
-                    )
-                );
-                await Contexto.Usuarios.AddAsync(NuevoUsuario);
-                await Contexto.SaveChangesAsync();
-                return Created();
-            }
-            else
-            {
-                return BadRequest("Un campo es inválido.");
-            }
+            // Hashear clave
+            nuevo.Clave = Convert.ToBase64String(
+                KeyDerivation.Pbkdf2(
+                    password: nuevo.Clave,
+                    salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
+                    prf: KeyDerivationPrf.HMACSHA256,
+                    iterationCount: 4096,
+                    numBytesRequested: 256 / 8
+                )
+            );
+
+            await Contexto.Inscritos.AddAsync(nuevo);
+            await Contexto.SaveChangesAsync();
+
+            return Created();
         }
-        catch (MySqlException ex)
+        catch (DbUpdateException ex)
         {
-            return StatusCode(500, ex);
+            return StatusCode(500, $"Error al guardar el inscrito: {ex.Message}");
         }
     }
 
     [AllowAnonymous]
-    [HttpPost("Ingresar")]
-    [SwaggerOperation(
-        Summary = "Inicia sesión.",
-        Description = "Si el nombre de usuario es válido y la contraseña corresponde al usuario con ése nombre, genera un `JsonWebToken` que será utilizado para acceder a ciertos endpoints protegidos."
-    )]
-    [SwaggerResponse(200, "Se ha iniciado la sesión.")]
-    [SwaggerResponse(400, "El nombre de usuario o la clave es incorrecto.")]
-    public async Task<IActionResult> IniciarSesiónAdmin([FromForm] LoginView LoginData)
+    [HttpPost("Login")]
+    public async Task<IActionResult> Login([FromForm] LoginViewInscrito login)
     {
-        Usuario? UsuarioSeleccionado = await Contexto.Usuarios.FirstOrDefaultAsync(usuario =>
-            usuario.NombreUsuario == LoginData.NombreUsuario
-        );
-        string ContraseñaConHash = Convert.ToBase64String(
+        if (!ModelState.IsValid)
+            return BadRequest("Faltan datos.");
+
+        var claveHasheada = Convert.ToBase64String(
             KeyDerivation.Pbkdf2(
-                password: LoginData.Clave,
+                password: login.Clave,
                 salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 4096,
                 numBytesRequested: 256 / 8
             )
         );
-        var Llave = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(Config["TokenAuthentication:SecretKey"])
+
+        var inscrito = await Contexto.Inscritos.FirstOrDefaultAsync(i =>
+            i.NumDocumento == login.NumDocumento
         );
-        var Credenciales = new SigningCredentials(Llave, SecurityAlgorithms.HmacSha256);
-        if (UsuarioSeleccionado == null || ContraseñaConHash != UsuarioSeleccionado.Clave)
+
+        if (inscrito == null || inscrito.Clave != claveHasheada)
         {
-            return BadRequest("Usuario o clave incorrectos.");
+            return BadRequest("DNI o clave incorrectos.");
         }
-        else
-        {
-            Claim ClaimNombre = new Claim(ClaimTypes.Name, UsuarioSeleccionado.NombreUsuario);
-            Claim ClaimMinisterio = new Claim(
-                "IdMinisterio",
-                UsuarioSeleccionado.IdMinisterio.ToString()
-            );
-            Claim ClaimIdUsuario = new Claim("IdUsuario", UsuarioSeleccionado.ID.ToString());
-            Claim ClaimRol = new Claim(ClaimTypes.Role, "Ministerio");
-            List<Claim> ClaimList = new List<Claim>(
-                [ClaimNombre, ClaimMinisterio, ClaimIdUsuario, ClaimRol]
-            );
 
-            var Token = new JwtSecurityToken(
-                issuer: Config["TokenAuthentication:Issuer"],
-                audience: Config["TokenAuthentication:Audience"],
-                claims: ClaimList,
-                expires: DateTime.Now.AddHours(24),
-                signingCredentials: Credenciales
-            );
+        // Guardamos nombre y DNI en la sesión (si está habilitada)
+        HttpContext.Session.SetString("Nombre", inscrito.Nombre);
+        HttpContext.Session.SetInt32("DNI", inscrito.NumDocumento);
 
-            Request.Headers.Authorization = new JwtSecurityTokenHandler().WriteToken(Token);
-
-            return RedirectToAction("Dashboard", "Admin");
-        }
+        return Ok("Inicio de sesión exitoso.");
     }
 }

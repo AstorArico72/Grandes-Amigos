@@ -163,3 +163,128 @@ document.addEventListener('click', function (e) {
 		}
 	}
 });
+
+// Login con Swal
+document.addEventListener('DOMContentLoaded', () => {
+	const loginForm = document.querySelector('#login form');
+	if (!loginForm) return;
+
+	loginForm.addEventListener('submit', function (e) {
+		e.preventDefault();
+
+		const datos = new FormData(loginForm);
+
+		fetch('/Api/Inscritos/Login', {
+			method: 'POST',
+			body: datos,
+		})
+			.then(async (resp) => {
+				if (resp.ok) {
+					await Swal.fire({
+						icon: 'success',
+						title: '¡Login exitoso!',
+						text: 'Sesión iniciada correctamente.',
+					});
+					// Redirigir o recargar página si es necesario
+					location.reload();
+				} else {
+					const msg = await resp.text();
+					throw new Error(msg || 'Login fallido');
+				}
+			})
+			.catch((err) => {
+				Swal.fire({
+					icon: 'error',
+					title: 'Error de login',
+					text: err.message || 'Usuario o clave incorrectos.',
+				});
+			});
+	});
+});
+
+// Guardar token al iniciar sesión y mostrar nombre en el header
+document.addEventListener('DOMContentLoaded', () => {
+	const loginForm = document.querySelector('#login form');
+	if (!loginForm) return;
+
+	loginForm.addEventListener('submit', function (e) {
+		e.preventDefault();
+
+		const datos = new FormData(loginForm);
+
+		fetch('/Api/Inscritos/Login', {
+			method: 'POST',
+			body: datos,
+		})
+			.then(async (resp) => {
+				if (resp.ok) {
+					const data = await resp.json();
+					// Verifica cómo llega el objeto
+					console.log(data.usuario);
+					// Guardar token y datos públicos del usuario (soporta mayúscula y minúscula)
+					localStorage.setItem('jwt_token_inscrito', data.token);
+					localStorage.setItem(
+						'nombre_inscrito',
+						data.usuario.Nombre || data.usuario.nombre
+					);
+					localStorage.setItem(
+						'dni_inscrito',
+						data.usuario.NumDocumento ||
+							data.usuario.numDocumento ||
+							data.usuario.numdocumento
+					);
+					await Swal.fire({
+						icon: 'success',
+						title: '¡Login exitoso!',
+						text: 'Sesión iniciada correctamente.',
+						timer: 2000, // ⏱️ visible 2 segundos
+						showConfirmButton: false,
+					});
+
+					setTimeout(() => {
+						location.reload();
+					}, 2000);
+				} else {
+					const msg = await resp.text();
+					throw new Error(msg || 'Login fallido');
+				}
+			})
+			.catch((err) => {
+				Swal.fire({
+					icon: 'error',
+					title: 'Error de login',
+					text: err.message || 'Usuario o clave incorrectos.',
+				});
+			});
+	});
+
+	// Mostrar header dinámico si ya hay token
+	const token = localStorage.getItem('jwt_token_inscrito');
+	const nombre = localStorage.getItem('nombre_inscrito');
+	if (token && nombre) {
+		const loginBtn = document.querySelector('[data-bs-target="#authModal"]');
+		if (loginBtn) {
+			loginBtn.outerHTML = `
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle header-btn text-white fw-bold rounded-pill px-4"
+					href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						${nombre}
+					</a>
+					<ul class="dropdown-menu dropdown-menu-end">
+						<li><a class="dropdown-item" href="/Inscripcion/MisEventos">Mis Eventos</a></li>
+						<li><a class="dropdown-item text-danger" id="cerrarSesionBtn" href="#">Cerrar Sesión</a></li>
+					</ul>
+				</li>`;
+		}
+	}
+
+	// Botón para cerrar sesión
+	document.addEventListener('click', (e) => {
+		if (e.target.closest('#cerrarSesionBtn')) {
+			localStorage.removeItem('jwt_token_inscrito');
+			localStorage.removeItem('nombre_inscrito');
+			localStorage.removeItem('dni_inscrito');
+			location.reload();
+		}
+	});
+});

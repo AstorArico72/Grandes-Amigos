@@ -57,15 +57,15 @@ img {
 /* Estilo fijo para los botones del header */
 .header-btn {
 	background-color: #ffffff;
-	color: #11497c;
+	color: #11497c !important; /* fuerza el color de texto */
 	border: 2px solid #ffffff;
 	font-weight: 600;
 	transition: background-color 0.3s ease;
 }
 
 .header-btn:hover {
-	background-color: #aee0f4; /* celeste claro */
-	color: #11497c; /* mantener contraste legible */
+	background-color: #aee0f4;
+	color: #11497c !important;
 }
 
 .main-con-fondo {

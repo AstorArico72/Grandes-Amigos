@@ -158,55 +158,82 @@ public class InscritosController : Controller
     [AllowAnonymous]
     [HttpPost("Login")]
     [SwaggerOperation(
-        Summary = "Inicia la sesión.",
-        Description = "Si el nombre de usuario es válido y la contraseña corresponde al usuario con ése nombre, genera un `JsonWebToken` que será utilizado para acceder a ciertos endpoints."
+        Summary = "Inicia la sesión del inscrito.",
+        Description = "Verifica documento y clave, y retorna 200 si es exitoso, junto con un JWT y los datos públicos del inscrito."
     )]
-    [SwaggerResponse(200, "Se ha iniciado la sesión.")]
-    [SwaggerResponse(400, "El nombre de usuario o la clave es incorrecto.")]
-    public async Task<IActionResult> IniciarSesiónInscrito([FromForm] LoginView LoginData)
+    [SwaggerResponse(200, "Login exitoso.")]
+    [SwaggerResponse(400, "Documento o clave incorrectos.")]
+    public async Task<IActionResult> IniciarSesiónInscrito([FromForm] LoginViewInscrito login)
     {
-        // Nota: Ésto usa el mismo LoginData que /Usuarios/Ingresar.
-        Inscrito? UsuarioSeleccionado = await Contexto.Inscritos.FirstOrDefaultAsync(usuario =>
-            usuario.Nombre == LoginData.NombreUsuario
+        if (!ModelState.IsValid)
+            return BadRequest("Faltan datos obligatorios.");
+
+        // Buscar por documento
+        var inscrito = await Contexto.Inscritos.FirstOrDefaultAsync(i =>
+            i.NumDocumento == login.NumDocumento
         );
-        string ContraseñaConHash = Convert.ToBase64String(
+
+        if (inscrito == null)
+            return BadRequest("Documento no registrado.");
+
+        var saltString = Config["Salt"];
+        if (string.IsNullOrEmpty(saltString))
+            return StatusCode(500, "No se configuró el salt para el hash de contraseñas.");
+
+        var claveHash = Convert.ToBase64String(
             KeyDerivation.Pbkdf2(
-                password: LoginData.Clave,
-                salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
+                password: login.Clave,
+                salt: System.Text.Encoding.UTF8.GetBytes(saltString),
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 4096,
                 numBytesRequested: 256 / 8
             )
         );
-        var Llave = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes(Config["TokenAuthentication:SecretKey"])
+
+        if (claveHash != inscrito.Clave)
+            return BadRequest("Clave incorrecta.");
+
+        // Claims públicos (incluye DNI, no clave)
+        var claims = new[]
+        {
+            new Claim("NumDocumento", inscrito.NumDocumento.ToString()),
+            new Claim("TipoDocumento", inscrito.TipoDocumento ?? ""),
+            new Claim("Correo", inscrito.Correo ?? ""),
+            new Claim("Teléfono", inscrito.Teléfono ?? ""),
+            new Claim("Asociación", inscrito.Asociación ?? ""),
+            new Claim("Nombre", inscrito.Nombre ?? ""),
+        };
+
+        var jwtKey = Config["TokenAuthentication:SecretKey"] ?? Config["JwtKey"];
+        if (string.IsNullOrEmpty(jwtKey))
+            return StatusCode(500, "No se configuró la clave JWT.");
+
+        var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var token = new JwtSecurityToken(
+            issuer: Config["TokenAuthentication:Issuer"] ?? "GrandesAmigos",
+            audience: Config["TokenAuthentication:Audience"] ?? "GrandesAmigos",
+            claims: claims,
+            expires: DateTime.Now.AddHours(12),
+            signingCredentials: creds
         );
-        var Credenciales = new SigningCredentials(Llave, SecurityAlgorithms.HmacSha256);
-        if (UsuarioSeleccionado == null || ContraseñaConHash != UsuarioSeleccionado.Clave)
-        {
-            return BadRequest("Usuario o clave incorrectos.");
-        }
-        else
-        {
-            Claim ClaimNombre = new Claim(ClaimTypes.Name, UsuarioSeleccionado.Nombre);
-            Claim ClaimIdUsuario = new Claim(
-                "IdUsuario",
-                UsuarioSeleccionado.NumDocumento.ToString()
-            );
-            Claim ClaimRol = new Claim(ClaimTypes.Role, "Usuario");
-            List<Claim> ClaimList = new List<Claim>([ClaimNombre, ClaimIdUsuario, ClaimRol]);
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            var Token = new JwtSecurityToken(
-                issuer: Config["TokenAuthentication:Issuer"],
-                audience: Config["TokenAuthentication:Audience"],
-                claims: ClaimList,
-                expires: DateTime.Now.AddHours(24),
-                signingCredentials: Credenciales
-            );
-
-            Request.Headers.Authorization = new JwtSecurityTokenHandler().WriteToken(Token);
-
-            return Ok();
-        }
+        // Devuelve token y datos públicos (incluye DNI, no clave)
+        return Ok(
+            new
+            {
+                token = tokenString,
+                usuario = new
+                {
+                    NumDocumento = inscrito.NumDocumento,
+                    TipoDocumento = inscrito.TipoDocumento,
+                    Correo = inscrito.Correo,
+                    Teléfono = inscrito.Teléfono,
+                    Asociación = inscrito.Asociación,
+                    Nombre = inscrito.Nombre,
+                },
+            }
+        );
     }
 }
