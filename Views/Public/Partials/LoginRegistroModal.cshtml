@@ -1,0 +1,116 @@
+<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header bg-azul-profundo text-white">
+        <h5 class="modal-title" id="authModalLabel">Acceso a Grandes Amigos</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">Iniciar Sesión</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button" role="tab">Registrarse</button>
+          </li>
+        </ul>
+
+        <!-- Contenido -->
+        <div class="tab-content" id="authTabContent">
+
+          <!-- LOGIN -->
+          <div class="tab-pane fade show active" id="login" role="tabpanel">
+            <form method="post" action="/Usuario/Login" class="mx-auto" style="max-width: 400px;">
+              <div class="mb-3">
+                <label for="loginDocumento" class="form-label">Documento</label>
+                <input type="text" class="form-control" name="NumDocumento" id="loginDocumento" required />
+              </div>
+              <div class="mb-3">
+                <label for="loginClave" class="form-label">Contraseña</label>
+                <div class="input-group">
+                  <input type="password" class="form-control" name="Clave" id="loginClave" required />
+                  <button class="btn btn-outline-secondary toggle-pass" type="button" tabindex="-1" data-target="loginClave">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+            </form>
+          </div>
+
+          <!-- REGISTRO -->
+          <div class="tab-pane fade" id="register" role="tabpanel">
+            <form method="post" action="/Api/Inscritos/Nuevo" id="formRegistro">
+              <div class="row g-3">
+
+                <div class="col-md-6">
+                  <label class="form-label">Nombre</label>
+                  <input type="text" name="Nombre" class="form-control" required>
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Tipo Documento</label>
+                  <select name="TipoDocumento" class="form-select" required>
+                    <option value="DNI">DNI</option>
+                    <option value="LC">LC</option>
+                    <option value="LE">LE</option>
+                  </select>
+                </div>
+
+                <div class="col-md-3">
+                  <label class="form-label">Número Documento</label>
+                  <input type="text" name="NumDocumento" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Correo</label>
+                  <input type="email" name="Correo" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label">Teléfono</label>
+                  <input type="text" name="Teléfono" class="form-control" placeholder="+54 9 ..." required>
+                </div>
+
+                <div class="col-md-12">
+                  <label class="form-label">Asociación</label>
+                  <input type="text" name="Asociación" class="form-control">
+                </div>
+
+                <div class="col-md-6 position-relative">
+                  <label class="form-label">Contraseña</label>
+                  <div class="input-group">
+                    <input type="password" name="Clave" id="claveInput" class="form-control" required>
+                    <button class="btn btn-outline-secondary toggle-pass" type="button" tabindex="-1" data-target="claveInput">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-md-6 position-relative">
+                  <label class="form-label">Repetir Contraseña</label>
+                  <div class="input-group">
+                    <input type="password" name="RepetirClave" id="repetirClave" class="form-control" required>
+                    <button class="btn btn-outline-secondary toggle-pass" type="button" tabindex="-1" data-target="repetirClave">
+                      <i class="bi bi-eye"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <button type="submit" class="btn btn-success w-100">Crear Cuenta</button>
+                </div>
+
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
