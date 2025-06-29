@@ -117,15 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	function validarCampo(campo, valor, inputs) {
 		switch (campo) {
 			case 'Nombre':
-				if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{3,}$/.test(valor))
+				if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑÄËÏÖÜäëïöüØøẞß\s]{3,}$/.test(valor))
+				//Hay más diacríticos además de los acentos. Pendiente: Mejorar la validación de éste campo para que nombres extranjeros con diacríticos, por ejemplo, Hämäläinen (Finlandés), Groß (Alemán), Øster (Danés), Itō (Japonés), puedan procesarse bien sin muchos pasos extra.
 					return 'El nombre debe tener al menos 3 letras y solo letras.';
 				break;
 			case 'Correo':
 				if (!valor.includes('@') || valor.length < 5) return 'Correo inválido.';
 				break;
 			case 'NumDocumento':
-				if (!/^\d{7,9}$/.test(valor))
-					return 'DNI inválido: debe contener solo números (7 a 9 cifras).';
+				if (!/^\d{6,9}$/.test(valor)) //Creo que aún existe gente con LC o LE de 6 dígitos
+					return 'DNI inválido: debe contener solo números (6 a 9 cifras).';
 				break;
 			case 'Teléfono':
 				if (!/^\+54\s?9\s?\d{2,4}\s?\d{3,4}\s?\d{3,4}$/.test(valor))
