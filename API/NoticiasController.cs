@@ -150,9 +150,9 @@ public class NoticiasController : Controller
                     NuevaNoticia.Enlace = "";
 
                 if (item.Categories.Any())
-                    NuevaNoticia.Categoria = item.Categories.First().Name;
+                    NuevaNoticia.Categoría = item.Categories.First().Name;
                 else
-                    NuevaNoticia.Categoria = "General";
+                    NuevaNoticia.Categoría = "General";
 
                 NuevaNoticia.FechaPublicación = item.PublishDate.DateTime;
                 NuevaNoticia.Título = item.Title.Text;

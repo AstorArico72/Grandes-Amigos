@@ -17,7 +17,7 @@ public class Noticia
     public string? Autor { get; set; }
 
     [Required]
-    public string? Categoria { get; set; } // Nueva propiedad para categorizar
+    public string? Categoría { get; set; } // Nueva propiedad para categorizar
 
     [Required]
     public string? Enlace { get; set; }

@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Grandes_Amigos.Controllers
 {
     [Route("Admin")]
+    [Authorize (Policy = "Ministerio")]
     public class AdminController : Controller
     {
         [HttpGet("Login")] // 👈 este permite mostrar el formulario
