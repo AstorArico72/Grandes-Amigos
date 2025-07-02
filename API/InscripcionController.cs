@@ -38,7 +38,7 @@ public class InscripcionController : Controller
     }
 
     [AllowAnonymous]
-    [HttpPost("Nueva")]
+    [HttpPost("Nueva")] //Pendiente: Decidir si será un formulario POST o un enlace GET con poca interacción del usuario.
     [SwaggerOperation(
         Summary = "Crea una nueva inscripción.",
         Description = "Crea una nueva entrada en la tabla `Inscripciones`, tomando como parámetros los ID del inscrito y del evento. El campo `IdEvento` es llenado por el querystring en `FormularioInscripcion`. Es decir, si uno se ha inscrito mediante ésta URL: `/Inscripcion?idEvento=101`, el valor `101` es puesto en el `<input>` escondido que es parte de los datos de la inscripción, y éso llena el campo `IdEvento` aquí."
@@ -49,20 +49,18 @@ public class InscripcionController : Controller
         "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal."
     )]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> NuevaInscripcion(
-        [FromForm] int IdInscrito,
-        [FromForm] int IdEvento
-    )
+    public async Task<IActionResult> NuevaInscripcion([FromForm] int IdEvento)
     {
         //Validación para confirmar si llegaron valores correctos.
-        Inscrito? InscritoEncontrado = await Contexto.Inscritos.FindAsync(IdInscrito);
+        //Usuario recibido de las Claims.
+        Usuario? UsuarioEncontrado = await Contexto.Usuarios.FindAsync(User.Claims.Where (claim => claim.Type == "NumDocumento").First ().Value);
         Evento? EventoEncontrado = await Contexto.Eventos.FindAsync(IdEvento);
 
-        if (InscritoEncontrado != null && EventoEncontrado != null)
+        if (UsuarioEncontrado != null && EventoEncontrado != null)
         {
             Inscripción NuevaInscripcion = new Inscripción(
                 EventoEncontrado.ID,
-                InscritoEncontrado.NumDocumento
+                UsuarioEncontrado.NumDocumento
             );
             try
             {

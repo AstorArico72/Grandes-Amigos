@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		// Si todo está OK, enviar por fetch
 		const datos = new FormData(form);
-		fetch('/Api/Inscritos/Nuevo', {
+		fetch('/Api/Usuarios/Nuevo', {
 			method: 'POST',
 			body: datos,
 		})
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const datos = new FormData(loginForm);
 
-		fetch('/Api/Inscritos/Login', {
+		fetch('/Api/Usuarios/Login', {
 			method: 'POST',
 			body: datos,
 		})
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const datos = new FormData(loginForm);
 
-		fetch('/Api/Inscritos/Login', {
+		fetch('/Api/Usuarios/Login', {
 			method: 'POST',
 			body: datos,
 		})

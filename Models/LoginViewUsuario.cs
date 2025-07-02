@@ -2,8 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Grandes_Amigos.Models;
 
-public class LoginViewInscrito
-{
+public class LoginViewUsuario {
     [Required(ErrorMessage = "Debe ingresar su número de documento.")]
     public int NumDocumento { get; set; }
 
