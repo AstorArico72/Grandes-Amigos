@@ -6,7 +6,8 @@ namespace Grandes_Amigos.Models;
 
 //Pendiente: Cambiar el nombre de ésta tabla. Creo que el nombre "Inscritos" no refleja la función.
 
-public class Usuario {
+public class Usuario
+{
     [Key]
     [Required(ErrorMessage = "Es necesario el número de documento.", AllowEmptyStrings = false)]
     [Column("Num_Documento")]
@@ -61,7 +62,7 @@ public class Usuario {
     public Usuario() { }
 
     // ✔ Constructor personalizado opcional
-    public Usuario (
+    public Usuario(
         int documento,
         string nombre,
         string tipoDocumento,

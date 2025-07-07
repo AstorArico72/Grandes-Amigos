@@ -53,7 +53,9 @@ public class InscripcionController : Controller
     {
         //Validación para confirmar si llegaron valores correctos.
         //Usuario recibido de las Claims.
-        Usuario? UsuarioEncontrado = await Contexto.Usuarios.FindAsync(User.Claims.Where (claim => claim.Type == "NumDocumento").First ().Value);
+        Usuario? UsuarioEncontrado = await Contexto.Usuarios.FindAsync(
+            User.Claims.Where(claim => claim.Type == "NumDocumento").First().Value
+        );
         Evento? EventoEncontrado = await Contexto.Eventos.FindAsync(IdEvento);
 
         if (UsuarioEncontrado != null && EventoEncontrado != null)
@@ -76,6 +78,42 @@ public class InscripcionController : Controller
         else
         {
             return BadRequest("Evento o inscrito inválidos.");
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> NuevaInscripcionJson([FromBody] InscripcionDto dto)
+    {
+        if (dto == null || dto.id_Evento <= 0 || dto.id_Inscrito <= 0)
+            return BadRequest(new { message = "Datos inválidos." });
+
+        var evento = await Contexto.Eventos.FindAsync(dto.id_Evento);
+        var usuario = await Contexto.Usuarios.FindAsync(dto.id_Inscrito); // dto.id_Inscrito == NumDocumento
+
+        if (evento == null || usuario == null)
+            return BadRequest(new { message = "Evento o usuario no encontrado." });
+
+        // Verificar si ya existe inscripción
+        bool yaInscripto = Contexto.Inscripciones.Any(i =>
+            i.ID_Evento == dto.id_Evento && i.ID_Inscrito == dto.id_Inscrito
+        );
+        if (yaInscripto)
+            return BadRequest(new { message = "Ya estás inscrito en este evento." });
+
+        var insc = new Inscripción(dto.id_Evento, dto.id_Inscrito);
+        try
+        {
+            Contexto.Inscripciones.Add(insc);
+            await Contexto.SaveChangesAsync();
+            return StatusCode(201, new { message = "Inscripción exitosa." });
+        }
+        catch (MySqlException ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
         }
     }
 
@@ -115,5 +153,20 @@ public class InscripcionController : Controller
         {
             return StatusCode(500, ex);
         }
+    }
+
+    [HttpGet("Existe")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult ExisteInscripcion([FromQuery] int eventoId, [FromQuery] int usuarioId)
+    {
+        if (eventoId <= 0 || usuarioId <= 0)
+            return BadRequest(new { message = "Parámetros inválidos." });
+
+        bool inscripto = Contexto.Inscripciones.Any(i =>
+            i.ID_Evento == eventoId && i.ID_Inscrito == usuarioId
+        );
+
+        return Ok(new { inscripto });
     }
 }

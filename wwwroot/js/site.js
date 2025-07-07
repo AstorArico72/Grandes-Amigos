@@ -118,14 +118,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		switch (campo) {
 			case 'Nombre':
 				if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑÄËÏÖÜäëïöüØøẞß\s]{3,}$/.test(valor))
-				//Hay más diacríticos además de los acentos. Pendiente: Mejorar la validación de éste campo para que nombres extranjeros con diacríticos, por ejemplo, Hämäläinen (Finlandés), Groß (Alemán), Øster (Danés), Itō (Japonés), puedan procesarse bien sin muchos pasos extra.
+					//Hay más diacríticos además de los acentos. Pendiente: Mejorar la validación de éste campo para que nombres extranjeros con diacríticos, por ejemplo, Hämäläinen (Finlandés), Groß (Alemán), Øster (Danés), Itō (Japonés), puedan procesarse bien sin muchos pasos extra.
 					return 'El nombre debe tener al menos 3 letras y solo letras.';
 				break;
 			case 'Correo':
 				if (!valor.includes('@') || valor.length < 5) return 'Correo inválido.';
 				break;
 			case 'NumDocumento':
-				if (!/^\d{6,9}$/.test(valor)) //Creo que aún existe gente con LC o LE de 6 dígitos
+				if (!/^\d{6,9}$/.test(valor))
+					//Creo que aún existe gente con LC o LE de 6 dígitos
 					return 'DNI inválido: debe contener solo números (6 a 9 cifras).';
 				break;
 			case 'Teléfono':
@@ -288,4 +289,174 @@ document.addEventListener('DOMContentLoaded', () => {
 			location.reload();
 		}
 	});
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+	let eventoSeleccionadoId = null;
+
+	// Cuando se hace click en el botón "Inscribirse" de un evento
+	document.querySelectorAll('.btn-inscribirse').forEach((btn) => {
+		btn.addEventListener('click', function () {
+			eventoSeleccionadoId = this.getAttribute('data-evento-id');
+			const btnConfirmar = document.getElementById('btnConfirmarInscripcion');
+			btnConfirmar.disabled = true;
+			btnConfirmar.textContent = 'Verificando...';
+
+			// Mostrar spinner mientras se carga la info
+			document.getElementById('infoEventoModal').innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            `;
+
+			// Traer info del evento por AJAX (ajusta la URL según tu API)
+			fetch(`/Api/Eventos/${eventoSeleccionadoId}`)
+				.then((resp) => resp.json())
+				.then((evento) => {
+					document.getElementById('infoEventoModal').innerHTML = `
+                        <h5>${evento.título}</h5>
+                        <p><strong>Fecha:</strong> ${new Date(
+													evento.fecha
+												).toLocaleDateString('es-AR')}</p>
+                        <p><strong>Departamento:</strong> Ministerio ID ${
+													evento.id_Ministerio
+												}</p>
+                        <p><strong>Descripción:</strong> ${
+													evento.descripcion || ''
+												}</p>
+                        <p><strong>Lugar:</strong> ${evento.lugar || ''}</p>
+                    `;
+
+					// Verificar si el usuario está logueado
+					const token = localStorage.getItem('jwt_token_inscrito');
+					if (!token) {
+						btnConfirmar.disabled = true;
+						btnConfirmar.textContent = 'Iniciá sesión para inscribirte';
+						return;
+					}
+
+					// Decodificar el JWT para obtener el número de documento del usuario
+					function parseJwt(token) {
+						try {
+							return JSON.parse(atob(token.split('.')[1]));
+						} catch (e) {
+							return null;
+						}
+					}
+					const payload = parseJwt(token);
+					const userId =
+						payload &&
+						(payload.NumDocumento ||
+							payload.numDocumento ||
+							payload.num_documento);
+
+					if (!userId) {
+						btnConfirmar.disabled = true;
+						btnConfirmar.textContent = 'Error de usuario';
+						return;
+					}
+
+					// Consultar si ya está inscrito
+					fetch(
+						`/Api/Inscripciones/Existe?eventoId=${eventoSeleccionadoId}&usuarioId=${userId}`,
+						{
+							headers: { Authorization: 'Bearer ' + token },
+						}
+					)
+						.then((resp) => resp.json())
+						.then((data) => {
+							if (data.inscripto) {
+								btnConfirmar.disabled = true;
+								btnConfirmar.textContent = 'Ya inscrito';
+							} else {
+								btnConfirmar.disabled = false;
+								btnConfirmar.textContent = 'Inscribirse';
+							}
+						})
+						.catch(() => {
+							btnConfirmar.disabled = true;
+							btnConfirmar.textContent = 'Error al verificar';
+						});
+				})
+				.catch(() => {
+					document.getElementById(
+						'infoEventoModal'
+					).innerHTML = `<div class="alert alert-danger">No se pudo cargar la información del evento.</div>`;
+					btnConfirmar.disabled = true;
+					btnConfirmar.textContent = 'Error';
+				});
+		});
+	});
+
+	// Cuando se hace click en "Inscribirse" en el modal
+	document
+		.getElementById('btnConfirmarInscripcion')
+		.addEventListener('click', function () {
+			const btn = this;
+			if (btn.disabled) return;
+
+			const token = localStorage.getItem('jwt_token_inscrito');
+			if (!token) {
+				Swal.fire('Debes iniciar sesión para inscribirte.', '', 'warning');
+				return;
+			}
+
+			function parseJwt(token) {
+				try {
+					return JSON.parse(atob(token.split('.')[1]));
+				} catch (e) {
+					return null;
+				}
+			}
+			const payload = parseJwt(token);
+			const userId =
+				payload &&
+				(payload.NumDocumento || payload.numDocumento || payload.num_documento);
+
+			if (!userId) {
+				Swal.fire(
+					'No se pudo obtener tu usuario. Inicia sesión nuevamente.',
+					'',
+					'error'
+				);
+				return;
+			}
+
+			// Enviar inscripción a la API
+			fetch('/Api/Inscripciones', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: 'Bearer ' + token,
+				},
+				body: JSON.stringify({
+					id_Evento: eventoSeleccionadoId,
+					id_Inscrito: userId,
+				}),
+			}).then((resp) => {
+				if (resp.ok) {
+					Swal.fire(
+						'¡Inscripción exitosa!',
+						'Te has inscrito correctamente al evento.',
+						'success'
+					);
+					var modal = bootstrap.Modal.getInstance(
+						document.getElementById('inscripcionModal')
+					);
+					modal.hide();
+				} else {
+					// Intenta leer JSON, si falla, muestra mensaje genérico
+					return resp.text().then((text) => {
+						let msg = 'Error al inscribirse';
+						try {
+							const data = JSON.parse(text);
+							msg = data.message || msg;
+						} catch {}
+						throw new Error(msg);
+					});
+				}
+			});
+		});
 });
