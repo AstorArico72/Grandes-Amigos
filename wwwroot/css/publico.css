@@ -218,6 +218,28 @@ img {
 	color: #11497c;
 }
 
+/* Tamaño fijo para las cards de noticias */
+.card.h-100 {
+	height: 400px; /* Ajusta el alto según lo que prefieras */
+	display: flex;
+	flex-direction: column;
+}
+
+.card-img-top {
+	max-height: 180px;
+	object-fit: cover;
+}
+
+.card-body {
+	flex: 1 1 auto;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 4; /* Número de líneas de texto a mostrar */
+	-webkit-box-orient: vertical;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
 @media (max-width: 768px) {
 	body {
 		background-attachment: scroll;
