@@ -49,19 +49,26 @@ public class EventosController : Controller
     [SwaggerResponse(404, "El evento no existe en la base de datos.")]
     public async Task<IActionResult> VerEvento([FromRoute] int id)
     {
-        //Éste método carga la vista de detalles.
-        //Es importante que las vistas de éste endpoint tengan un botón que enlace a /Inscripcion, con el ID del evento cargado en el querystring.
-        //Es decir, algo como /Inscripcion?idEvento={id}
-        //Ve a InscripcionController.cs para saber por qué.
-        Evento? EventoEncontrado = await Contexto.Eventos.FindAsync(id);
-        if (EventoEncontrado == null)
-        {
+        var evento = await Contexto.Eventos.FindAsync(id);
+        if (evento == null)
             return NotFound();
-        }
-        else
-        {
-            return Ok(EventoEncontrado);
-        }
+
+        // Buscar el ministerio relacionado
+        var ministerio = await Contexto.Ministerios.FindAsync(evento.ID_Ministerio);
+
+        // Devolver el evento + nombre del ministerio
+        return Ok(
+            new
+            {
+                id = evento.ID,
+                título = evento.Título,
+                descripcion = evento.Descripción,
+                fecha = evento.Fecha,
+                foto = evento.Foto,
+                id_Ministerio = evento.ID_Ministerio,
+                ministerioNombre = ministerio != null ? ministerio.Nombre : null,
+            }
+        );
     }
 
     [Authorize(Policy = "Ministerio")]

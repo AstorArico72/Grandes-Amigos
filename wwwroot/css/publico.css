@@ -240,6 +240,12 @@ img {
 	overflow: hidden;
 }
 
+.evento-card {
+	max-width: 900px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 @media (max-width: 768px) {
 	body {
 		background-attachment: scroll;

@@ -311,22 +311,39 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
 
-			// Traer info del evento por AJAX (ajusta la URL según tu API)
+			// Traer info del evento por AJAX
 			fetch(`/Api/Eventos/${eventoSeleccionadoId}`)
 				.then((resp) => resp.json())
 				.then((evento) => {
 					document.getElementById('infoEventoModal').innerHTML = `
-                        <h5>${evento.título}</h5>
-                        <p><strong>Fecha:</strong> ${new Date(
-													evento.fecha
-												).toLocaleDateString('es-AR')}</p>
-                        <p><strong>Departamento:</strong> Ministerio ID ${
-													evento.id_Ministerio
-												}</p>
-                        <p><strong>Descripción:</strong> ${
-													evento.descripcion || ''
-												}</p>
-                        <p><strong>Lugar:</strong> ${evento.lugar || ''}</p>
+                        <div class="row align-items-center">
+                            <div class="col-md-5 text-center mb-3 mb-md-0">
+                                <img src="${
+																	evento.foto
+																}" alt="Foto del evento" class="img-fluid rounded shadow" style="max-height:220px;object-fit:cover;">
+                            </div>
+                            <div class="col-md-7">
+                                <h4 class="fw-bold mb-2">${evento.título}</h4>
+                                <p class="mb-1"><i class="bi bi-calendar-event"></i> <strong>Fecha:</strong> ${new Date(
+																	evento.fecha
+																).toLocaleString('es-AR', {
+																	dateStyle: 'long',
+																	timeStyle: 'short',
+																})}</p>
+                                <p class="mb-1"><i class="bi bi-people"></i> <strong>Ministerio:</strong> ${
+																	evento.ministerioNombre ||
+																	evento.id_Ministerio
+																}</p>
+                                <p class="mb-2"><i class="bi bi-info-circle"></i> <strong>Descripción:</strong> ${
+																	evento.descripcion || ''
+																}</p>
+                                ${
+																	evento.lugar
+																		? `<p class="mb-0"><i class="bi bi-geo-alt"></i> <strong>Lugar:</strong> ${evento.lugar}</p>`
+																		: ''
+																}
+                            </div>
+                        </div>
                     `;
 
 					// Verificar si el usuario está logueado
