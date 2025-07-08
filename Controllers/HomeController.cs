@@ -18,12 +18,22 @@ public class HomeController : Controller
     // Acción principal para la vista Index
     public async Task<IActionResult> Index()
     {
+        var eventosConMinisterios = await _context
+            .Eventos.Include(e => e.Ministerio)
+            .OrderBy(e => e.Fecha)
+            .Select(e => new EventoConMinisterioViewModel
+            {
+                Evento = e,
+                NombreMinisterio = e.Ministerio.Nombre,
+            })
+            .ToListAsync();
+
         var model = new HomeViewModel
         {
             Deporte = await _noticiaService.GetNoticiasDeporteAsync(),
             Cultura = await _noticiaService.GetNoticiasCulturaAsync(),
             Salud = await _noticiaService.GetNoticiasSaludAsync(),
-            Eventos = await _context.Eventos.OrderBy(e => e.Fecha).ToListAsync(),
+            Eventos = eventosConMinisterios,
         };
 
         return View("~/Views/Public/Index.cshtml", model);

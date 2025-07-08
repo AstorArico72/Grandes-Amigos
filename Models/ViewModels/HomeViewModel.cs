@@ -5,5 +5,6 @@ public class HomeViewModel
     public List<Noticia> Deporte { get; set; } = new List<Noticia>();
     public List<Noticia> Cultura { get; set; } = new List<Noticia>();
     public List<Noticia> Salud { get; set; } = new List<Noticia>();
-    public List<Evento> Eventos { get; set; } = new List<Evento>();
+    public List<EventoConMinisterioViewModel> Eventos { get; set; } =
+        new List<EventoConMinisterioViewModel>();
 }
