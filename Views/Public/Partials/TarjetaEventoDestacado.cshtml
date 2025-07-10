@@ -1,0 +1,17 @@
+@model Grandes_Amigos.Models.ViewModels.EventoConMinisterioViewModel
+
+<div class="col">
+    <div class="card h-100 shadow-sm border-0">
+        <img src="@Model.Evento.Foto" class="card-img-top" alt="Imagen del evento">
+        <div class="card-body">
+            <h5 class="card-title">@Model.Evento.Título</h5>
+            <p class="card-text">@Model.Evento.Descripción</p>
+            <button class="btn btn-outline-primary btn-inscribirse"
+                    data-evento-id="@Model.Evento.ID"
+                    data-bs-toggle="modal"
+                    data-bs-target="#inscripcionModal">
+                Inscribirme
+            </button>
+        </div>
+    </div>
+</div>

@@ -220,7 +220,7 @@ img {
 
 /* Tamaño fijo para las cards de noticias */
 .card.h-100 {
-	height: 400px; /* Ajusta el alto según lo que prefieras */
+	height: 100%; /* importante */
 	display: flex;
 	flex-direction: column;
 }
@@ -231,19 +231,60 @@ img {
 }
 
 .card-body {
-	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.card-text {
+	flex-grow: 1;
 	overflow: hidden;
 	display: -webkit-box;
-	-webkit-line-clamp: 4; /* Número de líneas de texto a mostrar */
+	-webkit-line-clamp: 3;
 	-webkit-box-orient: vertical;
 	text-overflow: ellipsis;
-	overflow: hidden;
+}
+
+.card-body .btn {
+	margin-top: auto;
 }
 
 .evento-card {
 	max-width: 900px;
 	margin-left: auto;
 	margin-right: auto;
+}
+
+/* Fijar altura consistente para todas las tarjetas de noticias */
+.noticia-card {
+	height: 450px; /* altura fija para todas las cards */
+	display: flex;
+	flex-direction: column;
+}
+
+.noticia-card .card-img-top {
+	height: 180px;
+	object-fit: cover;
+}
+
+.noticia-card .card-body {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	padding: 1rem;
+}
+
+.noticia-card .card-text {
+	flex-grow: 1;
+	overflow: hidden;
+	display: -webkit-box;
+	-webkit-line-clamp: 4;
+	-webkit-box-orient: vertical;
+	text-overflow: ellipsis;
+}
+
+.noticia-card .btn {
+	margin-top: auto;
 }
 
 @media (max-width: 768px) {

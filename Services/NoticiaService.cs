@@ -13,7 +13,7 @@ public class NoticiaService : INoticiaService
     public async Task<List<Noticia>> GetNoticiasDeporteAsync()
     {
         return await _contexto
-            .Noticias.Where(n => n.Categoría == "Fútbol")
+            .Noticias.Where(n => n.Categoría == "Nutrición")
             .OrderByDescending(n => n.FechaPublicación)
             .ToListAsync();
     }

@@ -28,12 +28,24 @@ public class HomeController : Controller
             })
             .ToListAsync();
 
+        var eventosDestacados = await _context
+            .Eventos.Include(e => e.Ministerio)
+            .OrderBy(e => e.Fecha)
+            .Take(3)
+            .Select(e => new EventoConMinisterioViewModel
+            {
+                Evento = e,
+                NombreMinisterio = e.Ministerio.Nombre,
+            })
+            .ToListAsync();
+
         var model = new HomeViewModel
         {
             Deporte = await _noticiaService.GetNoticiasDeporteAsync(),
             Cultura = await _noticiaService.GetNoticiasCulturaAsync(),
             Salud = await _noticiaService.GetNoticiasSaludAsync(),
             Eventos = eventosConMinisterios,
+            EventosDestacados = eventosDestacados,
         };
 
         return View("~/Views/Public/Index.cshtml", model);
