@@ -31,14 +31,9 @@ public class Usuario
     [Required(ErrorMessage = "Es necesario un número de teléfono.")]
     /* Explicación de los límites en los números:
     *
-    * "11 0123 4567" ó "351 012 3456" (sin los espacios), son 10 caracteres, de ahí el mínimo.
-    * "+54 9 11 0123 4567" ó "+54 9 351 012 3456" (sin los espacios) son 14 caracteres, de ahí el máximo.
-    * Consultar si es necesario incluír "15" en los números de teléfono si son móviles, y subir el límite a 16 caracteres si es necesario.
-    * "+54 9 351 15 012 3456" (sin los espacios) son 16 caracteres.
-    * Éso es porque los números pueden tener éso, aunque parece estar en desuso últimamente.
-    * Pendiente: Consultar en qué formato guardar los números de teléfono, y diseñar el formulario de inscripción con ése detalle.
+    * "11 0123 4567" ó "351 012 3456" (sin los espacios), son 10 caracteres.
     */
-    [StringLength(maximumLength: 14, MinimumLength = 10)]
+    [StringLength(maximumLength: 10, MinimumLength = 10)]
     public string Teléfono { get; set; }
 
     [Required(

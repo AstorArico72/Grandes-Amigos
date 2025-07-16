@@ -7,6 +7,7 @@ namespace Grandes_Amigos.Controllers
     [Authorize (Policy = "Ministerio")]
     public class AdminController : Controller
     {
+        [AllowAnonymous]
         [HttpGet("Login")] // 👈 este permite mostrar el formulario
         public IActionResult Login()
         {

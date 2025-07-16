@@ -130,8 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
 					return 'DNI inválido: debe contener solo números (6 a 9 cifras).';
 				break;
 			case 'Teléfono':
-				if (!/^\+54\s?9\s?\d{2,4}\s?\d{3,4}\s?\d{3,4}$/.test(valor))
-					return 'Teléfono inválido. Usá formato +54 9 266 123 456.';
+				//Validación ajustada para tomar sólo números nacionales.
+				if (!/^\d{10}$/.test(valor))
+					return 'Teléfono inválido: El número debe tener 10 caracteres, sin espacios.';
 				break;
 			case 'Clave':
 				if (valor.length < 6)
@@ -175,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		e.preventDefault();
 
 		const datos = new FormData(loginForm);
-
+		//Pendiente: Adaptar éste método al panel Admin.
 		fetch('/Api/Usuarios/Login', {
 			method: 'POST',
 			body: datos,
