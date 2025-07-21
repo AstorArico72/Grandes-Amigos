@@ -1,3 +1,4 @@
+using System.Numerics;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -233,6 +234,48 @@ public class EventosController : Controller
         else
         {
             return BadRequest("El evento seleccionado no existe.");
+        }
+    }
+
+    [Authorize(Policy = "Usuario")]
+    [HttpGet("MisEventos")]
+    [SwaggerOperation(
+        Summary = "Lista los eventos asociados a los que se ha inscrito el usuario.",
+        Description = "Tomando la tabla 'Inscripciones' y las credenciales de usuario como referencia, filtra las entradas en la tabla 'Eventos', primero revisando en la tabla 'Inscripciones' si hay entradas con el ID del usuario, y luego tomando el ID del evento de la misma entrada."
+    )]
+    [SwaggerResponse(200, "El usuario está inscrito a al menos un evento.")]
+    [SwaggerResponse(400, "El usuario no está inscrito a ningún evento.")]
+    [SwaggerResponse(401, "Se accedió sin autorización.")]
+    [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
+    public async Task<IActionResult> MisEventos()
+    {
+        string IdUsuario = User.Claims.First(claim => claim.Type == "NumDocumento").Value;
+        Usuario? UsuarioEncontrado = await Contexto.Usuarios.FindAsync(Int32.Parse(IdUsuario));
+        
+        if (UsuarioEncontrado == null) //Validación para casos borde.
+        {
+            return Unauthorized("Usuario inválido.");
+        }
+        else
+        {
+            List<Inscripción> inscripciones = Contexto.Inscripciones.Where(item => item.ID_Inscrito == UsuarioEncontrado.NumDocumento).ToList();
+            List<Evento> eventos = new List<Evento>();
+            inscripciones.ForEach(item =>
+            {
+                Evento? encontrado = Contexto.Eventos.Find(item.ID_Evento);
+                if (encontrado != null)
+                {
+                    eventos.Add(encontrado);
+                }
+            });
+            if (eventos.Count == 0)
+            {
+                return BadRequest("No hay inscripciones.");
+            }
+            else
+            {
+                return Ok(eventos);
+            }
         }
     }
 

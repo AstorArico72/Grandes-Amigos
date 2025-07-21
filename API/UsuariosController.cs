@@ -201,6 +201,7 @@ public class UsuariosController : Controller {
             new Claim("Teléfono", Usuario.Teléfono ?? ""),
             new Claim("Asociación", Usuario.Asociación ?? ""),
             new Claim("Nombre", Usuario.Nombre ?? ""),
+            new Claim(ClaimTypes.Role, "Usuario")
         };
 
         var jwtKey = Config["TokenAuthentication:SecretKey"] ?? Config["JwtKey"];
