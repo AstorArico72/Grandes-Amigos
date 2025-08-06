@@ -27,6 +27,7 @@ namespace Grandes_Amigos.Controllers
             return View();
         }
 
+        [Obsolete("Transferido a /Api/Admin/Dashboard.")]
         [HttpGet("Dashboard")]
         public IActionResult Dashboard()
         {

@@ -13,12 +13,12 @@ using System.IdentityModel.Tokens.Jwt;
 [ApiController]
 [ApiVersionNeutral]
 [Route("/Api/Admin")]
-public class InscritosController : Controller
+public class AdminController : Controller
 {
     private readonly ContextoDb Contexto;
     private readonly IConfiguration Config;
 
-    public InscritosController(ContextoDb contexto, IConfiguration config)
+    public AdminController(ContextoDb contexto, IConfiguration config)
     {
         Contexto = contexto;
         Config = config;
@@ -116,19 +116,14 @@ public class InscritosController : Controller
         );
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        // Devuelve token y datos públicos (incluye DNI, no clave)
-        return Ok(
-            new
-            {
-                token = tokenString,
-                admin = new
-                {
-                    ID = Usuario.ID,
-                    Nombre = Usuario.NombreUsuario,
-                    IdMinisterio = Usuario.IdMinisterio
-                },
-            }
-        );
+        // Redirige al panel
+        return RedirectToAction("Dashboard");
     }
 
+    // Traido de Controllers/AdminController.cs
+    [HttpGet("Dashboard")]
+    public IActionResult Dashboard() {
+        // 🔓 Acceso libre mientras trabajo en el front
+        return View();
+    }
 }
