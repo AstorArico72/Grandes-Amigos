@@ -13,7 +13,7 @@ namespace Grandes_Amigos.Api;
 
 [ApiController]
 [ApiVersionNeutral]
-[Route("/Api/Usuarios")]
+[Route("/Api/Auth")]
 public class AuthController : Controller
 {
     private readonly ILogger<UsuariosController> _logger;
@@ -33,7 +33,7 @@ public class AuthController : Controller
 
     [AllowAnonymous]
     [HttpPost("Login")]
-    public IActionResult IniciarSesión([FromForm] LoginViewUsuario login)
+    public async Task<IActionResult> IniciarSesión([FromForm] LoginViewUsuario login)
     {
         Usuario? UsuarioEncontrado = null;
         Administrador? AdminEncontrado = null;
@@ -50,7 +50,15 @@ public class AuthController : Controller
             * Como los usuarios entran por el número de DNI, y los admins entran por nombre, es razonable asumir que el nombre de un admin no puede convertirse a int.
             * Entonces, si lo que viene del LoginView es parseable a int, quien entró no es un admin.
             */
-            UsuarioEncontrado = Contexto.Usuarios.Find(Int32.Parse(login.Identificador));
+            int? dni = null;
+            if (login.Identificador != null)
+            {
+                dni = int.Parse(login.Identificador);
+                if (dni != null)
+                {
+                    UsuarioEncontrado = await Contexto.Usuarios.FindAsync(dni);
+                }
+            }
         }
         catch (FormatException)
         {
@@ -58,7 +66,7 @@ public class AuthController : Controller
             * Si Int32.Parse falla porque hay otra cosa que no sea un número, devuelve FormatException.
             * Por éso, es razonable asumir que quien entra podría ser un admin.
             */
-            AdminEncontrado = Contexto.Admins.Where(admin => admin.NombreUsuario == login.Identificador).First();
+            AdminEncontrado = await Contexto.Admins.FirstOrDefaultAsync (admin => admin.NombreUsuario == login.Identificador);
         }
 
         var saltString = Config["Salt"];
@@ -122,7 +130,7 @@ public class AuthController : Controller
         );
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        if (UsuarioEncontrado != null && AdminEncontrado != null)
+        if (UsuarioEncontrado != null && AdminEncontrado == null)
         {
             var RespuestaUsuario = new
             {
