@@ -154,6 +154,8 @@ public class UsuariosController : Controller {
         }
     }
 
+    /*
+    [Obsolete("Reemplazado por /Api/Auth/Login")]
     [AllowAnonymous]
     [HttpPost("Login")]
     [SwaggerOperation(
@@ -169,7 +171,7 @@ public class UsuariosController : Controller {
 
         // Buscar por documento
         var Usuario = await Contexto.Usuarios.FirstOrDefaultAsync(i =>
-            i.NumDocumento == login.NumDocumento
+            i.NumDocumento == Int32.Parse(login.Identificador) // Ahora el LoginView recibe un string, no un int. Si puede convertirse a int, sigue.
         );
 
         if (Usuario == null)
@@ -235,8 +237,7 @@ public class UsuariosController : Controller {
                 },
             }
         );
-    }
-/*
+    } 
     [AllowAnonymous]
     [HttpPost("Login")]
     public async Task<IActionResult> Login([FromForm] LoginViewUsuario login)

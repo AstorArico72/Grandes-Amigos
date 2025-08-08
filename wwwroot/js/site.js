@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const datos = new FormData(loginForm);
 		//Pendiente: Adaptar éste método al panel Admin.
-		fetch('/Api/Usuarios/Login', {
+		fetch('/Api/Auth/Login', {
 			method: 'POST',
 			body: datos,
 		})
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const datos = new FormData(loginForm);
 
-		fetch('/Api/Usuarios/Login', {
+		fetch('/Api/Auth/Login', {
 			method: 'POST',
 			body: datos,
 		})
