@@ -1,36 +1,119 @@
-/* admin.css */
-:root {
-	--celeste-claro: #aee0f4;
-	--celeste: #49abc3;
-	--azul-profundo: #11497c;
+/* Contenido para /wwwroot/css/admin.css */
 
-	--blanco: #ffffff;
-	--gris-claro: #f8f9fa;
+:root {
+	--admin-bg: #0f172a;
+	--admin-surface: #111827;
+	--admin-accent: #22c55e;
 }
 
 body {
-	font-family: 'Montserrat', sans-serif;
+	background: #0b1020;
+	color: #e5e7eb; /* Color de texto base para el body */
 }
 
-.sidebar-admin {
-	width: 280px;
-	background-color: var(--azul-profundo);
+/* Sidebar */
+.sidebar {
+	width: 260px;
+	background: var(--admin-bg);
 	min-height: 100vh;
+	position: fixed;
+	left: 0;
+	top: 0;
+	padding: 1rem;
 }
 
-.sidebar-admin a {
-	color: var(--blanco);
-	text-decoration: none;
+.brand {
+	color: #fff;
+	font-weight: 700;
+	letter-spacing: 0.5px;
 }
 
-.sidebar-admin a:hover {
-	background-color: #0d3a6c;
+.nav-link {
+	color: #cbd5e1;
+	border-radius: 0.5rem;
 }
 
-.navbar-admin {
-	background-color: var(--celeste);
+.nav-link.active,
+.nav-link:hover {
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
 }
 
-.navbar-admin .nav-link {
-	color: var(--blanco);
+/* Topbar */
+.topbar {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background: rgba(17, 24, 39, 0.8);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Main Content Area */
+.content {
+	margin-left: 260px;
+	padding: 1.25rem;
+}
+
+/* Componentes */
+.card {
+	background: rgba(17, 24, 39, 0.8);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	color: #e5e7eb;
+}
+
+.kpi {
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: linear-gradient(
+		180deg,
+		rgba(17, 24, 39, 0.95) 0%,
+		rgba(15, 23, 42, 0.95) 100%
+	);
+	color: #e5e7eb;
+}
+
+.kpi .icon {
+	font-size: 1.75rem;
+	opacity: 0.9;
+}
+
+.btn-primary {
+	background: var(--admin-accent);
+	border-color: var(--admin-accent);
+}
+
+.btn-primary:hover {
+	filter: brightness(0.95);
+	background: var(--admin-accent);
+	border-color: var(--admin-accent);
+}
+
+.table thead th {
+	color: #9ca3af;
+	font-weight: 600;
+	border-color: rgba(255, 255, 255, 0.08);
+}
+
+.table tbody td {
+	color: #e5e7eb;
+	border-color: rgba(255, 255, 255, 0.06);
+}
+
+.form-control,
+.form-select {
+	background: #0f172a;
+	color: #e5e7eb;
+	border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.form-control::placeholder {
+	color: #9ca3af;
+}
+
+.form-control:focus,
+.form-select:focus {
+	background: #0f172a;
+	color: #e5e7eb;
+	border-color: var(--admin-accent);
+	box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
 }

@@ -1,174 +1,15 @@
-<!-- ============================
-File: /Views/Shared/_LayoutAdmin.cshtml
-Purpose: Main layout for the Admin area (sidebar + topbar + content)
-Deps: Bootstrap 5, Icons via Bootstrap Icons, small vanilla JS
-NOTE: Adjust brand name, colors, and links as needed.
-============================= -->
-@{
-    Layout = null;
-    var title = ViewData["Title"] as string ?? "Panel de Administración";
-}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@title – Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
-    <style>
-        :root { --admin-bg: #0f172a; --admin-surface: #111827; --admin-accent: #22c55e; }
-        body { background: #0b1020; }
-        .sidebar { width: 260px; background: var(--admin-bg); min-height: 100vh; position: fixed; left: 0; top: 0; padding: 1rem; }
-        .brand { color: #fff; font-weight: 700; letter-spacing:.5px; }
-        .nav-link { color: #cbd5e1; border-radius: .5rem; }
-        .nav-link.active, .nav-link:hover { background: rgba(255,255,255,.08); color: #fff; }
-        .topbar { position: sticky; top: 0; z-index: 10; background: rgba(17,24,39,.8); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,.06); }
-        .content { margin-left: 260px; padding: 1.25rem; }
-        .kpi { border: 1px solid rgba(255,255,255,.06); background: linear-gradient(180deg, rgba(17,24,39,.95) 0%, rgba(15,23,42,.95) 100%); color: #e5e7eb; }
-        .kpi .icon { font-size: 1.75rem; opacity: .9; }
-        .btn-primary { background: var(--admin-accent); border-color: var(--admin-accent); }
-        .btn-primary:hover { filter: brightness(0.95); }
-        .table thead th { color: #9ca3af; font-weight: 600; border-color: rgba(255,255,255,.08); }
-        .table tbody td { color: #e5e7eb; border-color: rgba(255,255,255,.06); }
-        .card { background: rgba(17,24,39,.8); border: 1px solid rgba(255,255,255,.06); color: #e5e7eb; }
-        .form-control, .form-select { background: #0f172a; color: #e5e7eb; border: 1px solid rgba(255,255,255,.15); }
-        .form-control::placeholder { color: #9ca3af; }
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar d-flex flex-column gap-3">
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-shield-lock text-success"></i>
-            <span class="brand">Grandes Amigos · Admin</span>
-        </div>
-        <hr class="text-white-50" />
-        <nav class="nav flex-column">
-            <a class="nav-link @((ViewContext.RouteData.Values["action"]?.ToString()=="Dashboard")?"active":"")" href="/Admin/Dashboard"><i class="bi bi-grid me-2"></i>Dashboard</a>
-            <a class="nav-link" href="/Admin/Usuarios"><i class="bi bi-people me-2"></i>Usuarios</a>
-            <a class="nav-link" href="/Admin/Eventos"><i class="bi bi-calendar-event me-2"></i>Eventos</a>
-            <a class="nav-link" href="/Admin/Noticias"><i class="bi bi-newspaper me-2"></i>Noticias</a>
-        </nav>
-        <div class="mt-auto small text-secondary">
-            <i class="bi bi-info-circle me-1"></i> Sesión: <span id="adminName">—</span>
-        </div>
-        <button id="btnLogout" class="btn btn-outline-light btn-sm mt-2"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>
-    </aside>
-
-    <!-- Topbar -->
-    <header class="topbar">
-        <div class="content">
-            <div class="d-flex align-items-center justify-content-between py-2">
-                <div class="d-flex align-items-center gap-3">
-                    <h1 class="h4 m-0">@title</h1>
-                    <span class="badge bg-success-subtle text-success border border-success">Admin</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <input id="topSearch" class="form-control form-control-sm" placeholder="Buscar…" />
-                    <button class="btn btn-primary btn-sm"><i class="bi bi-plus-circle me-1"></i>Nuevo</button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main content -->
-    <main class="content">
-        @RenderBody()
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-    // ===== Admin session helpers =====
-    const getToken = () => localStorage.getItem('adminToken');
-    const getAdmin = () => { try { return JSON.parse(localStorage.getItem('adminData')||'null'); } catch { return null; } };
-    const setSessionUi = () => {
-        const a = getAdmin();
-        document.getElementById('adminName').textContent = a?.admin?.NombreUsuario ?? a?.usuario?.Nombre ?? '—';
-    };
-    setSessionUi();
-    document.getElementById('btnLogout')?.addEventListener('click', ()=>{
-        localStorage.removeItem('adminToken');
-        localStorage.removeItem('adminData');
-        window.location.href = '/Admin/Login';
-    });
-    </script>
-    @RenderSection("Scripts", required: false)
-</body>
-</html>
-
-
-<!-- ============================
-File: /Views/Admin/Login.cshtml
-Purpose: Admin login view – uses /Api/Auth/Login (which returns token+admin)
-============================= -->
-@{
-    Layout = "/Views/Shared/_Layout.cshtml"; // usa el layout público para una pantalla simple o cámbialo si querés full admin.
-    ViewData["Title"] = "Acceso Administrador";
-}
-<section class="container py-5" style="max-width: 480px;">
-    <div class="card shadow-sm">
-        <div class="card-body p-4">
-            <h2 class="h4 mb-3">Ingresar al panel</h2>
-            <form id="adminLoginForm">
-                <div class="mb-3">
-                    <label class="form-label">Usuario (Administrador)</label>
-                    <input name="Identificador" class="form-control" placeholder="Nombre de usuario" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Contraseña</label>
-                    <input name="Clave" type="password" class="form-control" placeholder="••••••••" required />
-                </div>
-                <button class="btn btn-success w-100" type="submit"><i class="bi bi-shield-lock me-1"></i> Entrar</button>
-                <div id="loginMsg" class="mt-3 small text-danger d-none"></div>
-            </form>
-        </div>
-    </div>
-</section>
-@section Scripts {
-<script>
-const form = document.getElementById('adminLoginForm');
-const msg = document.getElementById('loginMsg');
-form.addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  msg.classList.add('d-none');
-  const fd = new FormData(form);
-  try {
-    // Usamos /Api/Auth/Login porque retorna token + admin
-    const res = await fetch('/Api/Auth/Login', { method:'POST', body: fd });
-    if(!res.ok){
-      const t = await res.text();
-      throw new Error(t || 'No fue posible iniciar sesión');
-    }
-    const data = await res.json();
-    localStorage.setItem('adminToken', data.token);
-    localStorage.setItem('adminData', JSON.stringify(data));
-    window.location.href = '/Admin/Dashboard';
-  } catch(err){
-    msg.textContent = err.message ?? 'Error de acceso';
-    msg.classList.remove('d-none');
-  }
-});
-</script>
-}
-
-
-<!-- ============================
-File: /Views/Admin/Dashboard.cshtml
-Purpose: Admin dashboard using _LayoutAdmin with 2 KPIs (Usuarios, Eventos), quick actions, and a table of próximos eventos.
-============================= -->
 @{
     Layout = "/Views/Shared/_LayoutAdmin.cshtml";
     ViewData["Title"] = "Dashboard";
 }
+
 <div class="container-fluid">
-    <!-- KPIs -->
     <div class="row g-3 mb-3">
         <div class="col-12 col-md-6 col-xxl-3">
             <div class="kpi rounded-3 p-3 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="small text-secondary">Usuarios</div>
-                    <div class="fs-3 fw-semibold" id="kpiUsuarios">—</div>
+                    <div class="fs-3 fw-semibold" id="kpiUsuarios">Cargando…</div>
                 </div>
                 <i class="icon bi bi-people"></i>
             </div>
@@ -177,7 +18,7 @@ Purpose: Admin dashboard using _LayoutAdmin with 2 KPIs (Usuarios, Eventos), qui
             <div class="kpi rounded-3 p-3 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="small text-secondary">Eventos</div>
-                    <div class="fs-3 fw-semibold" id="kpiEventos">—</div>
+                    <div class="fs-3 fw-semibold" id="kpiEventos">Cargando…</div>
                 </div>
                 <i class="icon bi bi-calendar-event"></i>
             </div>
@@ -195,14 +36,13 @@ Purpose: Admin dashboard using _LayoutAdmin with 2 KPIs (Usuarios, Eventos), qui
             <div class="kpi rounded-3 p-3 d-flex align-items-center justify-content-between">
                 <div>
                     <div class="small text-secondary">Sesión</div>
-                    <div class="fs-6 fw-semibold" id="kpiSesion">—</div>
+                    <div class="fs-6 fw-semibold" id="kpiSesion">Cargando…</div>
                 </div>
                 <i class="icon bi bi-person-badge"></i>
             </div>
         </div>
     </div>
 
-    <!-- Acciones rápidas -->
     <div class="card mb-3">
         <div class="card-body d-flex gap-2 flex-wrap">
             <a href="/Admin/Eventos/Nuevo" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Nuevo evento</a>
@@ -211,7 +51,6 @@ Purpose: Admin dashboard using _LayoutAdmin with 2 KPIs (Usuarios, Eventos), qui
         </div>
     </div>
 
-    <!-- Próximos eventos -->
     <div class="card">
         <div class="card-header d-flex align-items-center justify-content-between">
             <span class="fw-semibold">Próximos eventos</span>
@@ -238,60 +77,5 @@ Purpose: Admin dashboard using _LayoutAdmin with 2 KPIs (Usuarios, Eventos), qui
 </div>
 
 @section Scripts {
-<script>
-(function(){
-  const token = localStorage.getItem('adminToken');
-  const auth = token ? { 'Authorization': 'Bearer ' + token } : {};
-  // KPIs
-  const kpiUsuarios = document.getElementById('kpiUsuarios');
-  const kpiEventos  = document.getElementById('kpiEventos');
-  const kpiNoticias = document.getElementById('kpiNoticias');
-  const kpiSesion   = document.getElementById('kpiSesion');
-  const admin = (function(){ try { return JSON.parse(localStorage.getItem('adminData')||'null'); } catch { return null; }})();
-  kpiSesion.textContent = admin?.admin?.NombreUsuario ?? '—';
-
-  // Usuarios (requiere rol Ministerio)
-  fetch('/Api/Usuarios/Todos', { headers: auth })
-    .then(r => r.ok ? r.json() : [])
-    .then(list => { kpiUsuarios.textContent = Array.isArray(list) ? list.length : '—'; })
-    .catch(() => kpiUsuarios.textContent = '—');
-
-  // Eventos (público)
-  fetch('/Api/Eventos/Lista')
-    .then(r => r.ok ? r.json() : [])
-    .then(list => {
-      const arr = Array.isArray(list) ? list : [];
-      kpiEventos.textContent = arr.length;
-      // Render tabla (orden por fecha asc)
-      const tbody = document.getElementById('tblEventos');
-      tbody.innerHTML = '';
-      arr.sort((a,b)=> new Date(a.fecha) - new Date(b.fecha)).slice(0,8).forEach(ev => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="fw-semibold">${ev.título ?? ev.titulo ?? '(sin título)'}</td>
-          <td>${ new Date(ev.fecha).toLocaleString() }</td>
-          <td><span class="badge bg-dark-subtle text-light">${ev.id_Ministerio ?? ev.id_ministerio ?? '-'}</span></td>
-          <td class="text-end"><a class="btn btn-sm btn-outline-light" href="/Admin/Eventos/Editar/${ev.id}"><i class="bi bi-pencil"></i></a></td>`;
-        tbody.appendChild(tr);
-      });
-      if(!tbody.children.length){ tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-secondary">Sin eventos</td></tr>'; }
-    })
-    .catch(()=>{ kpiEventos.textContent='—'; });
-
-  // Noticias – no hay endpoint de listado; usamos una llamada de carga como acción (solo KPI simbólico)
-  kpiNoticias.textContent = '—';
-  document.getElementById('btnCargarNoticias')?.addEventListener('click', async (e)=>{
-    e.preventDefault();
-    const btn = e.currentTarget; const old = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Cargando…';
-    try {
-      const res = await fetch('/Api/Noticias/Cargar');
-      if(!res.ok) throw new Error('No se pudo cargar el RSS');
-      // Luego de cargar, podrías actualizar KPI si agregás un endpoint de conteo
-      alert('Noticias actualizadas.');
-    } catch(err){ alert(err.message); }
-    finally { btn.disabled=false; btn.innerHTML = old; }
-  });
-})();
-</script>
+    <script src="/js/dashboard.js"></script>
 }
