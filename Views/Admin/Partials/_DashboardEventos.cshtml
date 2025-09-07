@@ -1,0 +1,36 @@
+@model Grandes_Amigos.Models.ViewModels.DashboardViewModel
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Próximos Eventos</span>
+        <a asp-controller="Admin" asp-action="Eventos" class="btn btn-sm btn-outline-light">Ver todos</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle m-0">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Fecha</th>
+                    <th>Ministerio (ID)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.EventosRecientes.Any())
+                {
+                    @foreach (var evento in Model.EventosRecientes)
+                    {
+                        <tr>
+                            <td>@evento.Título</td>
+                            <td>@evento.Fecha.ToString("dd/MM/yyyy HH:mm") hs</td>
+                            <td>@evento.ID_Ministerio</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="3" class="text-center py-4 text-secondary">No hay eventos próximos.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

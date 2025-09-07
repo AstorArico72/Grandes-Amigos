@@ -1,4 +1,4 @@
-/* Contenido para /wwwroot/css/admin.css */
+/* Reemplaza el contenido de wwwroot/css/admin.css con esto */
 
 :root {
 	--admin-bg: #0f172a;
@@ -7,113 +7,85 @@
 }
 
 body {
-	background: #0b1020;
-	color: #e5e7eb; /* Color de texto base para el body */
+	background-color: #0b1020;
+	color: #e5e7eb;
 }
 
-/* Sidebar */
+/*
+ * ESTRUCTURA PRINCIPAL
+ * Esta es la parte clave para solucionar tu problema.
+*/
 .sidebar {
-	width: 260px;
-	background: var(--admin-bg);
-	min-height: 100vh;
-	position: fixed;
-	left: 0;
-	top: 0;
+	width: 260px; /* Ancho fijo para el menú */
+	height: 100vh; /* Ocupa toda la altura */
+	flex-shrink: 0; /* Evita que el menú se encoja */
+	background-color: var(--admin-bg);
+	display: flex;
+	flex-direction: column;
 	padding: 1rem;
 }
 
+.main-wrapper {
+	flex-grow: 1; /* ¡LA REGLA MÁGICA! Le dice que crezca y ocupe el espacio sobrante. */
+	height: 100vh; /* Ocupa toda la altura */
+	overflow-y: auto; /* Permite scroll solo en el área de contenido */
+}
+
+/* --- Componentes del Sidebar --- */
+.sidebar-header {
+	padding: 0.5rem 0;
+}
 .brand {
 	color: #fff;
 	font-weight: 700;
 	letter-spacing: 0.5px;
 }
-
-.nav-link {
+.sidebar .nav-link {
 	color: #cbd5e1;
 	border-radius: 0.5rem;
+	transition: all 0.2s ease-in-out;
+	margin-bottom: 0.25rem;
 }
-
-.nav-link.active,
-.nav-link:hover {
+.sidebar .nav-link:hover {
 	background: rgba(255, 255, 255, 0.08);
 	color: #fff;
 }
+.sidebar .nav-link.active {
+	/* Para cuando implementemos la clase activa */
+	background: var(--admin-accent);
+	color: #fff;
+	font-weight: 500;
+}
+.sidebar-footer {
+	margin-top: auto; /* Empuja el footer hacia abajo */
+	font-size: 0.875rem;
+	color: #9ca3af;
+}
 
-/* Topbar */
+/* --- Componentes del Contenido --- */
 .topbar {
-	position: sticky;
-	top: 0;
-	z-index: 10;
-	background: rgba(17, 24, 39, 0.8);
-	backdrop-filter: blur(8px);
+	background: var(--admin-surface);
 	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+	height: 60px; /* Altura fija para la barra superior */
 }
 
-/* Main Content Area */
-.content {
-	margin-left: 260px;
-	padding: 1.25rem;
-}
-
-/* Componentes */
 .card {
-	background: rgba(17, 24, 39, 0.8);
+	background: var(--admin-surface);
 	border: 1px solid rgba(255, 255, 255, 0.06);
-	color: #e5e7eb;
 }
 
 .kpi {
+	background: var(--admin-surface);
 	border: 1px solid rgba(255, 255, 255, 0.06);
-	background: linear-gradient(
-		180deg,
-		rgba(17, 24, 39, 0.95) 0%,
-		rgba(15, 23, 42, 0.95) 100%
-	);
-	color: #e5e7eb;
 }
 
-.kpi .icon {
-	font-size: 1.75rem;
-	opacity: 0.9;
-}
-
-.btn-primary {
-	background: var(--admin-accent);
-	border-color: var(--admin-accent);
-}
-
-.btn-primary:hover {
-	filter: brightness(0.95);
-	background: var(--admin-accent);
-	border-color: var(--admin-accent);
+.table {
+	--bs-table-bg: transparent;
+	--bs-table-border-color: rgba(255, 255, 255, 0.1);
+	--bs-table-color: #e5e7eb;
+	--bs-table-striped-color: #e5e7eb;
 }
 
 .table thead th {
 	color: #9ca3af;
-	font-weight: 600;
-	border-color: rgba(255, 255, 255, 0.08);
-}
-
-.table tbody td {
-	color: #e5e7eb;
-	border-color: rgba(255, 255, 255, 0.06);
-}
-
-.form-control,
-.form-select {
-	background: #0f172a;
-	color: #e5e7eb;
-	border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.form-control::placeholder {
-	color: #9ca3af;
-}
-
-.form-control:focus,
-.form-select:focus {
-	background: #0f172a;
-	color: #e5e7eb;
-	border-color: var(--admin-accent);
-	box-shadow: 0 0 0 0.25rem rgba(34, 197, 94, 0.25);
 }

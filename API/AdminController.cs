@@ -1,14 +1,15 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using Grandes_Amigos.Models;
+using Grandes_Amigos.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Swashbuckle.AspNetCore.Annotations;
 
 [ApiController]
 [ApiVersionNeutral]
@@ -22,6 +23,24 @@ public class AdminController : Controller
     {
         Contexto = contexto;
         Config = config;
+    }
+
+    [HttpGet("Dashboard")] // o la ruta que corresponda si la tienes definida
+    public async Task<IActionResult> Dashboard()
+    {
+        // 1. Creamos la "caja" para nuestros datos.
+        var viewModel = new DashboardViewModel();
+
+        // 2. Llenamos la caja con datos de la base de datos.
+        viewModel.TotalUsuarios = await Contexto.Usuarios.CountAsync();
+        viewModel.TotalEventos = await Contexto.Eventos.CountAsync();
+        viewModel.EventosRecientes = await Contexto
+            .Eventos.OrderByDescending(e => e.Fecha)
+            .Take(5) // Tomamos los 5 más recientes
+            .ToListAsync();
+
+        // 3. Enviamos la caja llena de datos a la vista.
+        return View(viewModel);
     }
 
     [AllowAnonymous]
@@ -98,7 +117,7 @@ public class AdminController : Controller
         {
             new Claim(ClaimTypes.Name, Usuario.NombreUsuario),
             new Claim(ClaimTypes.Role, "Ministerio"),
-            new Claim("IdMinisterio", Usuario.IdMinisterio.ToString())
+            new Claim("IdMinisterio", Usuario.IdMinisterio.ToString()),
         };
 
         var jwtKey = Config["TokenAuthentication:SecretKey"] ?? Config["JwtKey"];
@@ -118,12 +137,5 @@ public class AdminController : Controller
 
         // Redirige al panel
         return RedirectToAction("Dashboard");
-    }
-
-    // Traido de Controllers/AdminController.cs
-    [HttpGet("Dashboard")]
-    public IActionResult Dashboard() {
-        // 🔓 Acceso libre mientras trabajo en el front
-        return View();
     }
 }

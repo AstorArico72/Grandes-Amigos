@@ -1,0 +1,16 @@
+@model Grandes_Amigos.Models.ViewModels.DashboardViewModel
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="kpi rounded-3 p-3">
+            <div class="small text-secondary">Usuarios Registrados</div>
+            <div class="fs-3 fw-semibold">@Model.TotalUsuarios</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="kpi rounded-3 p-3">
+            <div class="small text-secondary">Eventos Activos</div>
+            <div class="fs-3 fw-semibold">@Model.TotalEventos</div>
+        </div>
+    </div>
+</div>
