@@ -6,16 +6,18 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// URL de desarrollo
 builder.WebHost.UseUrls("http://127.0.0.1:5020");
 
-// builder.Services.AddMvc(); // No es necesario si usas AddControllersWithViews
-// builder.Services.AddControllers(); // No es necesario si usas AddControllersWithViews
-builder.Services.AddControllersWithViews(); // <-- Agrega esta línea para habilitar controladores y vistas Razor
+// MVC + API
+builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiVersioning(config =>
 {
     config.DefaultApiVersion = new ApiVersion(0, 1);
 });
+
+// Swagger
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc(
@@ -24,15 +26,15 @@ builder.Services.AddSwaggerGen(options =>
         {
             Version = "v0.1",
             Title = "Grandes Amigos",
-            Description =
-                "API para la plataforma Grandes Amigos, una plataforma web centralizada y fácil de usar que conecta a los adultos mayores con las diversas actividades y programas ofrecidos por los distintos ministerios, fomentando la participación, la interacción social y el bienestar.",
-            //Pendiente: Completar documentación OpenAPI
+            Description = "API para la plataforma Grandes Amigos.",
         }
     );
     options.EnableAnnotations();
     options.DocumentFilter<ReemplazaVersion>();
     options.OperationFilter<QuitaVersion>();
 });
+
+// DB
 builder.Services.AddDbContext<ContextoDb>(options =>
     options.UseMySql(
         builder.Configuration["ConnectionStrings:DefaultConnection"],
@@ -40,8 +42,24 @@ builder.Services.AddDbContext<ContextoDb>(options =>
     )
 );
 
+/* =========================
+   AUTENTICACIÓN: COOKIE + JWT
+   ========================= */
 builder
-    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .Services.AddAuthentication(options =>
+    {
+        // Por defecto usamos Cookies para MVC (panel admin).
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Admin/Login"; // Redirección al login del panel
+        options.AccessDeniedPath = "/Admin/Login";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters =
@@ -63,6 +81,12 @@ builder
             };
     });
 
+/* =========================
+   AUTORIZACIÓN (POLÍTICAS)
+   =========================
+   - "Ministerio": acepta cookie (panel) y JWT (API con [Authorize(AuthenticationSchemes=JwtBearerDefaults.AuthenticationScheme, Policy="Ministerio")])
+   - "Usuario": sólo JWT (público autenticado)
+*/
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(
@@ -71,14 +95,17 @@ builder.Services.AddAuthorization(options =>
         {
             policy.RequireRole("Ministerio");
             policy.RequireClaim(ClaimTypes.Role, "Ministerio");
-            policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+            policy.AddAuthenticationSchemes(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                JwtBearerDefaults.AuthenticationScheme
+            );
         }
     );
+
     options.AddPolicy(
         "Usuario",
         policy =>
         {
-            //Pendiente: Acordar un nombre para ésta política.
             policy.RequireRole("Usuario");
             policy.RequireClaim(ClaimTypes.Role, "Usuario");
             policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
@@ -86,19 +113,13 @@ builder.Services.AddAuthorization(options =>
     );
 });
 
-// Configuración de servicios para la inyección de dependencias
+// DI
 builder.Services.AddScoped<INoticiaService, NoticiaService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    //Pendiente: Manejo de errores
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
-else
+// Swagger sólo en dev
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>
         {
@@ -109,14 +130,21 @@ else
             options.SwaggerEndpoint($"/api/docs/v0.1/docs.json", "Grandes Amigos");
         });
 }
+else
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
+/* IMPORTANTE: Autenticación antes de Autorización */
+app.UseAuthentication();
 app.UseAuthorization();
 
+// Rutas MVC
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
