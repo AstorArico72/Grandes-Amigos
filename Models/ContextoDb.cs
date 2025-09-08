@@ -12,6 +12,7 @@ public class ContextoDb : DbContext
     public DbSet<Ministerio> Ministerios { get; set; }
     public DbSet<Administrador> Admins { get; set; }
     public DbSet<Noticia> Noticias { get; set; }
+    public DbSet<Recuperación> Tokens { get; set; }
 
     public ContextoDb(DbContextOptions<ContextoDb> opciones)
         : base(opciones) { }
