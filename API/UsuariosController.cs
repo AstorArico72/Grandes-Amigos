@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit;
+using MailKit.Net.Smtp;
+using System.Security.Cryptography;
 using MySqlConnector;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -14,7 +17,8 @@ namespace Grandes_Amigos.Api;
 [ApiController]
 [ApiVersionNeutral]
 [Route("/Api/Usuarios")]
-public class UsuariosController : Controller {
+public class UsuariosController : Controller
+{
     // UsuariosController.cs
     // ```
     // CRUD de Usuarios
@@ -154,6 +158,70 @@ public class UsuariosController : Controller {
         }
     }
 
+    [AllowAnonymous]
+    [HttpPost("ClaveOlvidada")]
+    [SwaggerOperation(
+        Summary = "Permite al usuario restablecer su clave.",
+        Description = "Genera un token de reinicio, y envía un enlace al usuario conteniendo dicho token."
+    )]
+    //Éste endpoint tendría que ser llamado desde un botón "Clave olvidada" o algo así.
+    public async Task<IActionResult> ClaveOlvidada([FromForm] string correo) {
+        try
+        {
+            Usuario? UsuarioSeleccionado = await Contexto.Usuarios.FirstOrDefaultAsync(item => item.Correo == correo);
+            if (UsuarioSeleccionado == null)
+            {
+                return BadRequest("La cuenta pedida no existe.");
+            }
+
+            //Ésto genera un token de reinicio. ¿Son 64 bytes suficiente?
+            string TokenSinHash = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+            //Ésto convierte el token a un hash.
+            string TokenHash = Convert.ToBase64String(
+                KeyDerivation.Pbkdf2(
+                    password: TokenSinHash,
+                    salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
+                    prf: KeyDerivationPrf.HMACSHA1,
+                    iterationCount: 100,
+                    numBytesRequested: 64
+                )
+            );
+
+            //Ésto sirve para guardar el token convertido a hash en la base de datos.
+            Recuperación NuevoToken = new Recuperación();
+            NuevoToken.Token_Recuperación = TokenHash;
+            NuevoToken.ID_Usuario = UsuarioSeleccionado.NumDocumento;
+            NuevoToken.Válido_Hasta = DateTime.Now.AddMinutes(10);
+            Contexto.Tokens.Add(NuevoToken);
+
+            //Ésto genera el correo de recuperación y lo envía.
+            var Mensaje = new MimeKit.MimeMessage ();
+            Mensaje.To.Add (new MailboxAddress (UsuarioSeleccionado.Nombre, UsuarioSeleccionado.Correo));
+            Mensaje.From.Add (new MailboxAddress ("Grandes Amigos", Config["Correo:UsuarioSMTP"]));
+            Mensaje.Subject = "Reinicio de contraseña";
+            TextPart HtmlMensaje = new TextPart ("html"){
+                //El enlace enviado por correo contiene el token sin convertir a hash, que después se coteja con el token convertido a hash en la BD.
+                Text = @$"
+                <h1>Saludos</h1>
+                <p>{UsuarioSeleccionado.Nombre}, éste correo fue enviado porque hubo una solicitud para recuperar acceso a tu cuenta. Si tú hiciste ésa solicitud, <a href='https://127.0.0.1:5020/Api/Usuarios/RecuperarCuenta?TokenRecuperacion={TokenSinHash}'> entra aquí </a> para poder cambiar la clave.</p>
+                <h4> El enlace provisto es válido por 10 minutos. </h4>"
+                };
+            Mensaje.Body = HtmlMensaje;
+            SmtpClient ClienteSMTP = new SmtpClient ();
+            //Pendiente: Ver si la ULP tiene un servidor SMTP (o IMAP, o POP3), y usar éso en lugar de un proveedor externo.
+            ClienteSMTP.Connect ("", 25, false);
+            ClienteSMTP.Authenticate (Config["Correo:UsuarioSMTP"], Config["Correo:ClaveSMTP"]);
+            await ClienteSMTP.SendAsync (Mensaje);
+
+            await Contexto.SaveChangesAsync();
+            return Ok("Revisa tu correo, allí recibirás tu nueva contraseña.");
+        }
+        catch (Exception ex) {
+            return StatusCode(500, ex);
+        }
+    }
+    
     /*
     [Obsolete("Reemplazado por /Api/Auth/Login")]
     [AllowAnonymous]
