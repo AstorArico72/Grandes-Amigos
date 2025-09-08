@@ -12,7 +12,6 @@
 html,
 body {
 	width: 100%;
-	overflow-x: hidden;
 }
 
 body {
@@ -29,10 +28,10 @@ body {
 }
 
 #hero-inicio {
-	background-image: url('https://cdn.fs.teachablecdn.com/0XLydLzBQr6eJfNwsZTo');
+	background-image: url('https://uploads.teachablecdn.com/attachments/3ETcouogQr6et4320x1t_grandes+amigos+sin+capacitaciones.png');
 	background-size: cover;
 	background-position: center;
-	height: 90vh;
+	height: 100vh;
 }
 
 #hero-inicio {
