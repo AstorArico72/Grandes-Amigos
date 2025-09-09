@@ -13,13 +13,16 @@
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using Grandes_Amigos.Models;
 using Grandes_Amigos.Models.ViewModels;
+using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MimeKit;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Grandes_Amigos.Api
@@ -191,6 +194,109 @@ namespace Grandes_Amigos.Api
                     ultimosEventos,
                 }
             );
+        }
+
+        // Copia de /Api/Usuarios/ClaveOlvidada, modificada un poco para trabajar con entidades Administrador.
+        [AllowAnonymous]
+        [HttpPost("ClaveOlvidada")]
+        [SwaggerOperation(
+            Summary = "Permite al usuario restablecer su clave.",
+            Description = "Genera un token de reinicio, y envía un enlace al usuario conteniendo dicho token."
+        )]
+        [SwaggerResponse(200, "Se envió el correo de recuperación.")]
+        [SwaggerResponse(400, "Se ingresó una dirección de correo no registrada.")]
+        [SwaggerResponse(500, "Ocurrió un error.")]
+        //Éste endpoint tendría que ser llamado desde un botón "Clave olvidada" o algo así.
+        public async Task<IActionResult> ClaveOlvidada([FromForm] string correo)
+        {
+            try
+            {
+                Administrador? UsuarioSeleccionado = await _ctx.Admins.FirstOrDefaultAsync(item => item.Email == correo);
+                if (UsuarioSeleccionado == null)
+                {
+                    return BadRequest("La cuenta pedida no existe.");
+                }
+
+                //Ésto genera un token de reinicio. ¿Son 64 bytes suficiente?
+                string TokenSinHash = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+
+                //Ésto convierte el token a un hash.
+                string TokenHash = Convert.ToBase64String(
+                    KeyDerivation.Pbkdf2(
+                        password: TokenSinHash,
+                        salt: System.Text.Encoding.UTF8.GetBytes(_cfg["Salt"]),
+                        prf: KeyDerivationPrf.HMACSHA1,
+                        iterationCount: 100,
+                        numBytesRequested: 64
+                    )
+                );
+
+                //Ésto sirve para guardar el token convertido a hash en la base de datos.
+                Recuperación NuevoToken = new Recuperación();
+                NuevoToken.Token_Recuperación = TokenHash;
+                NuevoToken.ID_Usuario = UsuarioSeleccionado.ID;
+                NuevoToken.Válido_Hasta = DateTime.Now.AddMinutes(10);
+                _ctx.Tokens.Add(NuevoToken);
+
+                //Ésto genera el correo de recuperación y lo envía.
+                var Mensaje = new MimeKit.MimeMessage();
+                Mensaje.To.Add(new MailboxAddress(UsuarioSeleccionado.NombreUsuario, UsuarioSeleccionado.Email));
+                Mensaje.From.Add(new MailboxAddress("Grandes Amigos", _cfg["Correo:UsuarioSMTP"]));
+                Mensaje.Subject = "Reinicio de contraseña";
+                TextPart HtmlMensaje = new TextPart("html")
+                {
+                    //El enlace enviado por correo contiene el token sin convertir a hash, que después se coteja con el token convertido a hash en la BD.
+                    Text = @$"
+                <h1>Saludos</h1>
+                <p>{UsuarioSeleccionado.NombreUsuario}, éste correo fue enviado porque hubo una solicitud para recuperar acceso a tu cuenta. Si tú hiciste ésa solicitud, <a href='https://127.0.0.1:5020/Api/Usuarios/RecuperarCuenta?TokenRecuperacion={TokenSinHash}'> entra aquí </a> para poder cambiar la clave.</p>
+                <h4> El enlace provisto es válido por 10 minutos. </h4>"
+                };
+                Mensaje.Body = HtmlMensaje;
+                SmtpClient ClienteSMTP = new SmtpClient();
+                //Pendiente: Ver si la ULP tiene un servidor SMTP (o IMAP, o POP3), y usar éso en lugar de un proveedor externo.
+                ClienteSMTP.Connect("", 25, false);
+                ClienteSMTP.Authenticate(_cfg["Correo:UsuarioSMTP"], _cfg["Correo:ClaveSMTP"]);
+                await ClienteSMTP.SendAsync(Mensaje);
+
+                await _ctx.SaveChangesAsync();
+                return Ok("Revisa tu correo, allí recibirás tu nueva contraseña.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex);
+            }
+        }
+
+        // Copia de /Api/Usuarios/RecuperarCuenta, modificada un poco para trabajar con entidades Administrador.
+        [AllowAnonymous]
+        [HttpGet("RecuperarCuenta")]
+        [SwaggerOperation(
+            Summary = "Autoriza al usuario a cambiar su clave.",
+            Description = "Revisa si el enlace tiene un token válido, y si lo es, permite el cambio de contraseña."
+        )]
+        [SwaggerResponse(400, "El token está vacío o es inválido.")]
+        public IActionResult RecuperarCuenta([FromQuery(Name = "TokenRecuperación")] string token)
+        {
+            DateTime HoraDeIngreso = DateTime.Now;
+            string TokenHash = Convert.ToBase64String(
+                KeyDerivation.Pbkdf2(
+                password: token, //Convierte el token del query string a un hash.
+                salt: System.Text.Encoding.UTF8.GetBytes(_cfg["Salt"]),
+                prf: KeyDerivationPrf.HMACSHA1,
+                iterationCount: 100,
+                numBytesRequested: 64
+                )
+            );
+            Recuperación? TokenTemporal = _ctx.Tokens.Find(TokenHash);
+
+            if (TokenTemporal != null && DateTime.Compare(HoraDeIngreso, TokenTemporal.Válido_Hasta) == -1)
+            {
+                return Ok(); //Ésto debería redirigir a la vista de cambiar contraseña.
+            }
+            else
+            {
+                return BadRequest("Token inválido.");
+            }
         }
     }
 }

@@ -20,15 +20,19 @@ public class Administrador {
     [Column("ID_Ministerio")]
     public int IdMinisterio { get; set; }
 
+    [Required]
+    public string Email { get; set; }
+
     // ✔ Constructor requerido por EF Core
     public Administrador() { }
 
     // ✔ Constructor personalizado opcional
-    public Administrador(int id, string nombre, string clave, int ministerio)
+    public Administrador(int id, string nombre, string clave, int ministerio, string email)
     {
         ID = id;
         NombreUsuario = nombre;
         Clave = clave;
         IdMinisterio = ministerio;
+        Email = email;
     }
 }
