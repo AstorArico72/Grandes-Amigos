@@ -1,38 +1,99 @@
-/* Reemplaza el contenido de wwwroot/css/admin.css con esto */
+/* ==========================================================================
+   ADMIN THEME (Bootstrap 5)
+   Archivo: wwwroot/css/admin.css
+   Objetivo: Estilos del panel de administración, tema oscuro
+   ========================================================================== */
 
+/* ==========================================================================
+   0) VARIABLES DEL TEMA
+   -------------------------------------------------------------------------- */
 :root {
-	--admin-bg: #0f172a;
-	--admin-surface: #111827;
-	--admin-accent: #22c55e;
+	/* Paleta base (modo oscuro) */
+	--admin-bg-1: #0b1020; /* fondo principal */
+	--admin-bg-2: #0f172a; /* sidebar */
+	--admin-bg-3: #111827; /* topbar / cards */
+	--admin-text-1: #e5e7eb; /* texto principal */
+	--admin-text-2: #9ca3af; /* texto secundario */
+	--admin-border: rgba(255, 255, 255, 0.08);
+
+	/* Acentos (puedes cambiar el verde por el color institucional) */
+	--admin-accent: #22c55e; /* verde */
+	--admin-accent-2: #3f5ed7; /* azul alternativo para botones outline */
+
+	/* Radios / sombras */
+	--admin-radius: 12px;
+	--admin-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+
+	/* Espaciados */
+	--admin-gutter: 1rem;
 }
 
+/* ==========================================================================
+   1) BASE GLOBAL
+   -------------------------------------------------------------------------- */
+html,
 body {
-	background-color: #0b1020;
-	color: #e5e7eb;
+	height: 100%;
+}
+body {
+	background: var(--admin-bg-1);
+	color: var(--admin-text-1);
+	font-feature-settings: 'liga' 1, 'kern' 1;
 }
 
-/*
- * ESTRUCTURA PRINCIPAL
- * Esta es la parte clave para solucionar tu problema.
-*/
-.sidebar {
-	width: 260px; /* Ancho fijo para el menú */
-	height: 100vh; /* Ocupa toda la altura */
-	flex-shrink: 0; /* Evita que el menú se encoja */
-	background-color: var(--admin-bg);
+/* Utilidad para forzar el tema en el body si hiciera falta */
+.admin-theme {
+	background: var(--admin-bg-1);
+	color: var(--admin-text-1);
+}
+
+/* Links */
+a {
+	color: #8fb0ff;
+	text-decoration: none;
+}
+a:hover {
+	color: #bcd0ff;
+	text-decoration: underline;
+}
+
+/* Bordes y sombras comunes */
+.border-soft {
+	border: 1px solid var(--admin-border) !important;
+}
+.shadow-soft {
+	box-shadow: var(--admin-shadow);
+}
+
+/* Texto secundario extra legible sobre oscuro */
+.text-secondary-200 {
+	color: rgba(233, 239, 255, 0.75) !important;
+}
+
+/* ==========================================================================
+   2) ESTRUCTURA PRINCIPAL (WRAPPER + SIDEBAR + CONTENT)
+   -------------------------------------------------------------------------- */
+/* Wrapper general (flex row) en el layout del admin */
+.d-flex {
+	gap: 0;
+} /* sin separación lateral por defecto */
+
+/* Sidebar (clase original) + alias por compatibilidad */
+.sidebar,
+.admin-sidebar {
+	width: 260px; /* ancho fijo */
+	height: 100vh; /* ocupa toda la altura */
+	flex-shrink: 0; /* no se achica */
+	background: var(--admin-bg-2);
+	border-right: 1px solid var(--admin-border);
 	display: flex;
 	flex-direction: column;
-	padding: 1rem;
+	padding: var(--admin-gutter);
 }
 
-.main-wrapper {
-	flex-grow: 1; /* ¡LA REGLA MÁGICA! Le dice que crezca y ocupe el espacio sobrante. */
-	height: 100vh; /* Ocupa toda la altura */
-	overflow-y: auto; /* Permite scroll solo en el área de contenido */
-}
-
-/* --- Componentes del Sidebar --- */
-.sidebar-header {
+/* Encabezado brand del sidebar */
+.sidebar-header,
+.admin-sidebar .sidebar-header {
 	padding: 0.5rem 0;
 }
 .brand {
@@ -40,52 +101,223 @@ body {
 	font-weight: 700;
 	letter-spacing: 0.5px;
 }
-.sidebar .nav-link {
+
+/* Navegación del sidebar */
+.sidebar .nav,
+.admin-sidebar .nav {
+	gap: 0.25rem;
+}
+
+.sidebar .nav-link,
+.admin-sidebar .nav-link {
 	color: #cbd5e1;
 	border-radius: 0.5rem;
 	transition: all 0.2s ease-in-out;
-	margin-bottom: 0.25rem;
+	padding: 0.5rem 0.75rem;
 }
-.sidebar .nav-link:hover {
+.sidebar .nav-link:hover,
+.admin-sidebar .nav-link:hover {
 	background: rgba(255, 255, 255, 0.08);
 	color: #fff;
 }
-.sidebar .nav-link.active {
-	/* Para cuando implementemos la clase activa */
+.sidebar .nav-link.active,
+.admin-sidebar .nav-link.active {
 	background: var(--admin-accent);
-	color: #fff;
-	font-weight: 500;
+	color: #0b1020;
+	font-weight: 600;
 }
+
+/* Footer del sidebar pegado abajo */
 .sidebar-footer {
-	margin-top: auto; /* Empuja el footer hacia abajo */
+	margin-top: auto;
 	font-size: 0.875rem;
-	color: #9ca3af;
+	color: var(--admin-text-2);
 }
 
-/* --- Componentes del Contenido --- */
-.topbar {
-	background: var(--admin-surface);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-	height: 60px; /* Altura fija para la barra superior */
+/* Main wrapper: ocupa el espacio restante y permite scroll en contenido */
+.main-wrapper {
+	flex-grow: 1;
+	height: 100vh;
+	overflow-y: auto;
+	background: var(--admin-bg-1);
 }
 
+/* Área de contenido dentro del wrapper */
+.content {
+	background: var(--admin-bg-1);
+	padding: var(--admin-gutter);
+}
+
+/* ==========================================================================
+   3) TOPBAR / HEADER
+   -------------------------------------------------------------------------- */
+/* Clase original (.topbar) y alias (.navbar-admin) */
+.topbar,
+.navbar-admin {
+	background: var(--admin-bg-3);
+	border-bottom: 1px solid var(--admin-border);
+	height: 60px;
+	color: var(--admin-text-1);
+}
+
+/* Ejemplo: si usas un header con container interno */
+.navbar-admin .container-fluid,
+.topbar .container-fluid {
+	min-height: 60px;
+}
+
+/* ==========================================================================
+   4) TARJETAS, KPIs Y CONTENEDORES
+   -------------------------------------------------------------------------- */
 .card {
-	background: var(--admin-surface);
-	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: var(--admin-bg-3);
+	color: var(--admin-text-1);
+	border: 1px solid var(--admin-border);
+	border-radius: var(--admin-radius);
 }
-
+.card-header {
+	background: rgba(255, 255, 255, 0.02);
+	border-bottom: 1px solid var(--admin-border);
+	color: var(--admin-text-1);
+}
 .kpi {
-	background: var(--admin-surface);
-	border: 1px solid rgba(255, 255, 255, 0.06);
+	background: var(--admin-bg-3);
+	border: 1px solid var(--admin-border);
+	border-radius: var(--admin-radius);
 }
 
+/* ==========================================================================
+   5) TABLAS (modo oscuro Bootstrap)
+   -------------------------------------------------------------------------- */
 .table {
 	--bs-table-bg: transparent;
 	--bs-table-border-color: rgba(255, 255, 255, 0.1);
-	--bs-table-color: #e5e7eb;
-	--bs-table-striped-color: #e5e7eb;
+	--bs-table-color: var(--admin-text-1);
+	--bs-table-striped-color: var(--admin-text-1);
+}
+.table thead th {
+	color: var(--admin-text-2);
+	border-color: var(--admin-border) !important;
+}
+.table td,
+.table th {
+	border-color: var(--admin-border) !important;
 }
 
-.table thead th {
-	color: #9ca3af;
+/* ==========================================================================
+   6) FORMULARIOS (inputs sobre fondo oscuro)
+   -------------------------------------------------------------------------- */
+.form-control,
+.form-select {
+	background: rgba(255, 255, 255, 0.06);
+	border: 1px solid rgba(255, 255, 255, 0.18);
+	color: var(--admin-text-1);
 }
+.form-control::placeholder {
+	color: rgba(233, 239, 255, 0.5);
+}
+.form-control:focus,
+.form-select:focus {
+	background: rgba(255, 255, 255, 0.08);
+	border-color: rgba(99, 132, 255, 0.6);
+	box-shadow: 0 0 0 0.2rem rgba(99, 132, 255, 0.15);
+	color: #fff;
+}
+
+/* Botones */
+.btn-primary {
+	background: linear-gradient(180deg, #3c6dff 0%, #2a4ddb 100%);
+	border: 0;
+}
+.btn-primary:hover {
+	filter: brightness(1.05);
+}
+
+.btn-outline-primary {
+	color: #8fb0ff;
+	border-color: var(--admin-accent-2);
+}
+.btn-outline-primary:hover {
+	color: #fff;
+	background: var(--admin-accent-2);
+	border-color: var(--admin-accent-2);
+}
+
+/* ==========================================================================
+   7) MODALES Y ALERTAS
+   -------------------------------------------------------------------------- */
+.modal-content {
+	background: var(--admin-bg-3);
+	color: var(--admin-text-1);
+	border: 1px solid var(--admin-border);
+	border-radius: var(--admin-radius);
+}
+.alert {
+	border-radius: var(--admin-radius);
+}
+
+/* ==========================================================================
+   8) UTILIDADES EXTRAS
+   -------------------------------------------------------------------------- */
+/* Borde tenue útil para cajas y separadores */
+.hr-soft {
+	border: 0;
+	height: 1px;
+	background: var(--admin-border);
+	margin: 1rem 0;
+}
+
+/* Estados de KPI con errores */
+.text-danger-soft {
+	color: #ff9aa9 !important;
+}
+
+/* ==========================================================================
+   9) SCROLLBARS (opcional, si quieres mejorar en Windows)
+   -------------------------------------------------------------------------- */
+* {
+	scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+	scrollbar-width: thin;
+}
+*::-webkit-scrollbar {
+	height: 8px;
+	width: 8px;
+}
+*::-webkit-scrollbar-thumb {
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 6px;
+}
+*::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+/* ==========================================================================
+   10) RESPONSIVE
+   -------------------------------------------------------------------------- */
+@media (max-width: 992px) {
+	.sidebar,
+	.admin-sidebar {
+		width: 220px;
+	}
+}
+@media (max-width: 768px) {
+	.sidebar,
+	.admin-sidebar {
+		position: fixed;
+		z-index: 1040;
+		left: 0;
+		top: 0;
+		bottom: 0;
+		transform: translateX(-100%);
+		transition: transform 0.2s ease;
+	}
+	.sidebar.is-open,
+	.admin-sidebar.is-open {
+		transform: translateX(0);
+	}
+	.main-wrapper {
+		height: auto;
+		min-height: 100vh;
+	}
+}
+/* ========================================================================== */

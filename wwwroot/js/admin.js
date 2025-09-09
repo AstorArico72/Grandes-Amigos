@@ -1,85 +1,139 @@
-async function renderDashboard() {
-	// 1. Dibuja el esqueleto del HTML del dashboard.
-	mainContent.innerHTML = `
-        <h1 class="h4 mb-4">Dashboard</h1>
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-md-6 col-xxl-3">
-                <div class="kpi rounded-3 p-3">
-                    <div class="small text-secondary">Usuarios Registrados</div>
-                    <div class="fs-3 fw-semibold" id="kpiUsuarios">Cargando...</div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-xxl-3">
-                <div class="kpi rounded-3 p-3">
-                    <div class="small text-secondary">Eventos Activos</div>
-                    <div class="fs-3 fw-semibold" id="kpiEventos">Cargando...</div>
-                </div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header fw-semibold">Próximos eventos</div>
-            <div class="table-responsive">
-                <table class="table align-middle m-0">
-                    <thead><tr><th>Título</th><th>Fecha</th><th></th></tr></thead>
-                    <tbody id="tblEventos"><tr><td colspan="3" class="text-center p-4">Cargando...</td></tr></tbody>
-                </table>
-            </div>
-        </div>`;
+// wwwroot/js/admin.js
+// Panel Admin (JWT-only)
+// ------------------------------------------------------------
+// - No dibuja HTML: las vistas Razor arman el DOM.
+// - Redirige a /Admin/Login si no hay token (guard simple).
+// - Expone window.getAuthHeaders() para otros JS del panel.
+// - Hidrata KPIs y tabla de eventos si existen en el DOM.
+// ------------------------------------------------------------
 
-	// 2. Llama a las APIs para obtener los datos.
-	try {
-		// Hacemos las dos peticiones en paralelo para más eficiencia.
-		const [usersResponse, eventsResponse] = await Promise.all([
-			// Petición a un endpoint PROTEGIDO
-			fetch('/Api/Usuarios/Todos', { headers: getAuthHeaders() }),
-			// Petición a un endpoint PÚBLICO
-			fetch('/Api/Eventos/Lista'),
-		]);
+(function () {
+	'use strict';
 
-		// 3. Procesa y muestra los datos de Usuarios.
-		const kpiUsuariosEl = document.getElementById('kpiUsuarios');
-		if (usersResponse.ok) {
-			const users = await usersResponse.json();
-			kpiUsuariosEl.textContent = users.length;
-		} else {
-			// Si la respuesta no es OK (ej. 401 Unauthorized), muestra un error.
-			kpiUsuariosEl.textContent = 'Error';
-			kpiUsuariosEl.classList.add('text-danger');
+	// ====== Helpers de Auth (JWT) ======
+	function hasToken() {
+		return !!localStorage.getItem('adminToken');
+	}
+
+	function getAuthHeaders() {
+		const t = localStorage.getItem('adminToken');
+		return t ? { Authorization: `Bearer ${t}` } : {};
+	}
+
+	// Exponer para que otros scripts (usuarios.js, etc.) lo usen
+	window.getAuthHeaders = getAuthHeaders;
+
+	// ====== Guard de rutas del panel ======
+	function guardAdminRoutes() {
+		const path = window.location.pathname;
+
+		// Dejar pasar el login del admin
+		if (path === '/Admin/Login') return;
+
+		// Cualquier otra ruta bajo /Admin requiere token
+		if (path.startsWith('/Admin') && !hasToken()) {
+			window.location.replace('/Admin/Login');
 		}
+	}
 
-		// 4. Procesa y muestra los datos de Eventos.
+	// ====== Dashboard: hidratar KPIs y tabla si existen ======
+	async function hydrateDashboard() {
+		const kpiUsuariosEl = document.getElementById('kpiUsuarios');
 		const kpiEventosEl = document.getElementById('kpiEventos');
 		const eventTableBody = document.getElementById('tblEventos');
-		if (eventsResponse.ok) {
-			const events = await eventsResponse.json();
-			kpiEventosEl.textContent = events.length;
 
-			eventTableBody.innerHTML = ''; // Limpiar la tabla
-			if (events.length > 0) {
-				events.slice(0, 5).forEach((ev) => {
-					// Muestra solo los primeros 5
-					eventTableBody.innerHTML += `
-                        <tr>
-                            <td>${ev.título}</td>
-                            <td>${new Date(ev.fecha).toLocaleDateString(
-															'es-AR'
-														)}</td>
-                            <td class="text-end"><a href="#eventos" class="btn btn-sm btn-outline-light">Ver</a></td>
-                        </tr>`;
-				});
-			} else {
-				eventTableBody.innerHTML =
-					'<tr><td colspan="3" class="text-center p-4">No hay eventos próximos.</td></tr>';
+		// Si no hay ninguno de estos elementos, no estamos en el dashboard
+		if (!kpiUsuariosEl && !kpiEventosEl && !eventTableBody) return;
+
+		try {
+			// Pedidos en paralelo (usuarios requiere Bearer; eventos es público)
+			const [usersRes, eventsRes] = await Promise.all([
+				fetch('/Api/Usuarios/Todos', { headers: getAuthHeaders() }),
+				fetch('/Api/Eventos/Lista'),
+			]);
+
+			// Usuarios
+			if (kpiUsuariosEl) {
+				if (usersRes.ok) {
+					const users = await usersRes.json();
+					kpiUsuariosEl.textContent = Array.isArray(users) ? users.length : '0';
+				} else {
+					kpiUsuariosEl.textContent = 'Error';
+					kpiUsuariosEl.classList.add('text-danger');
+				}
 			}
-		} else {
-			kpiEventosEl.textContent = 'Error';
-			kpiEventosEl.classList.add('text-danger');
-			eventTableBody.innerHTML =
-				'<tr><td colspan="3" class="text-center p-4 text-danger">Error al cargar eventos.</td></tr>';
+
+			// Eventos
+			if (kpiEventosEl || eventTableBody) {
+				if (eventsRes.ok) {
+					const events = await eventsRes.json();
+					if (kpiEventosEl)
+						kpiEventosEl.textContent = Array.isArray(events)
+							? events.length
+							: '0';
+
+					if (eventTableBody) {
+						eventTableBody.innerHTML = '';
+						const list = Array.isArray(events) ? events.slice(0, 5) : [];
+						if (list.length === 0) {
+							eventTableBody.innerHTML =
+								'<tr><td colspan="3" class="text-center p-4">No hay eventos próximos.</td></tr>';
+						} else {
+							for (const ev of list) {
+								const fecha = ev.fecha ? new Date(ev.fecha) : null;
+								const fechaStr = fecha
+									? fecha.toLocaleDateString('es-AR', {
+											day: '2-digit',
+											month: '2-digit',
+											year: 'numeric',
+									  })
+									: '-';
+								eventTableBody.insertAdjacentHTML(
+									'beforeend',
+									`<tr>
+                      <td>${ev.título ?? ev.titulo ?? ev.Título ?? '-'}</td>
+                      <td>${fechaStr}</td>
+                      <td class="text-end">
+                        <a href="#" class="btn btn-sm btn-outline-primary">Ver</a>
+                      </td>
+                   </tr>`
+								);
+							}
+						}
+					}
+				} else {
+					if (kpiEventosEl) {
+						kpiEventosEl.textContent = 'Error';
+						kpiEventosEl.classList.add('text-danger');
+					}
+					if (eventTableBody) {
+						eventTableBody.innerHTML =
+							'<tr><td colspan="3" class="text-center p-4 text-danger">Error al cargar eventos.</td></tr>';
+					}
+				}
+			}
+		} catch (err) {
+			console.error('Error al cargar datos del dashboard:', err);
+			if (kpiUsuariosEl) kpiUsuariosEl.textContent = 'Error';
+			if (kpiEventosEl) kpiEventosEl.textContent = 'Error';
 		}
-	} catch (error) {
-		console.error('Error al cargar datos del dashboard:', error);
-		document.getElementById('kpiUsuarios').textContent = 'Error';
-		document.getElementById('kpiEventos').textContent = 'Error';
 	}
-}
+
+	// ====== Logout (JWT-only) opcional ======
+	function wireLogout() {
+		const btn = document.getElementById('btnLogoutJwt');
+		if (!btn) return;
+		btn.addEventListener('click', (e) => {
+			e.preventDefault();
+			localStorage.removeItem('adminToken');
+			window.location.replace('/Admin/Login');
+		});
+	}
+
+	// ====== Boot ======
+	document.addEventListener('DOMContentLoaded', () => {
+		guardAdminRoutes();
+		hydrateDashboard();
+		wireLogout();
+	});
+})();

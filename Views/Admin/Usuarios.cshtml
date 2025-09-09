@@ -1,87 +1,41 @@
 @{
-    ViewData["Title"] = "Gestionar Usuarios";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Usuarios";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 m-0">@ViewData["Title"]</h1>
-    <button id="btn-nuevo-usuario" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#usuario-modal">
-        <i class="bi bi-plus-circle me-1"></i>Nuevo Usuario
-    </button>
-</div>
+<div class="container-fluid">
+    <h2 class="mb-3">Usuarios</h2>
 
-<div class="card">
-    <div class="table-responsive">
-        <table class="table align-middle m-0">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Documento</th>
-                    <th>Correo</th>
-                    <th class="text-end">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-usuarios-body">
-                </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="modal fade" id="usuario-modal" tabindex="-1" aria-labelledby="modal-titulo" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modal-titulo">Nuevo Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex gap-2 mb-3">
+                <button id="btnRefrescarUsuarios" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-repeat"></i> Refrescar
+                </button>
+                <button id="btnNuevoUsuario" class="btn btn-primary btn-sm">
+                    <i class="bi bi-person-plus"></i> Nuevo
+                </button>
             </div>
-            <div class="modal-body">
-                <form id="form-usuario">
-                    <input type="hidden" name="NumDocumento" id="NumDocumento">
-                    
-                    <div class="mb-3">
-                        <label for="Nombre" class="form-label">Nombre Completo</label>
-                        <input type="text" class="form-control" id="Nombre" name="Nombre" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="Correo" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="Correo" name="Correo" required>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="TipoDocumento" class="form-label">Tipo Doc.</label>
-                            <input type="text" class="form-control" id="TipoDocumento" name="TipoDocumento" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="NumDocumentoInput" class="form-label">N° Documento</label>
-                            <input type="number" class="form-control" id="NumDocumentoInput" name="NumDocumento" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="Teléfono" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="Teléfono" name="Teléfono" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="Asociación" class="form-label">Asociación</label>
-                        <input type="text" class="form-control" id="Asociación" name="Asociación" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="Clave" class="form-label">Clave</label>
-                        <input type="password" class="form-control" id="Clave" name="Clave" required>
-                        <small class="form-text text-muted">La clave se guardará encriptada.</small>
-                    </div>
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>DNI</th>
+                            <th>Nombre</th>
+                            <th>Correo</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyUsuarios">
+                        <!-- Se llena por JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="~/js/usuarios.js"></script>
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    <script src="~/js/usuarios.js" asp-append-version="true"></script>
 }

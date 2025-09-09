@@ -1,11 +1,17 @@
 @model Grandes_Amigos.Models.ViewModels.DashboardViewModel
-
 @{
     ViewData["Title"] = "Dashboard";
-    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
-<div class="container-fluid">
-    @await Html.PartialAsync("~/Views/Admin/Partials/_DashboardKPIs.cshtml", Model)
-    @await Html.PartialAsync("~/Views/Admin/Partials/_DashboardEventos.cshtml", Model)
-</div>
+<!-- KPIs -->
+@await Html.PartialAsync("~/Views/Admin/Partials/_DashboardKPIs.cshtml", Model)
+
+<!-- Eventos recientes -->
+@await Html.PartialAsync("~/Views/Admin/Partials/_DashboardEventos.cshtml", Model)
+
+@section Scripts {
+    <!-- Admin guard + helpers -->
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    <!-- Lógica puntual del dashboard (si la estás usando) -->
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}

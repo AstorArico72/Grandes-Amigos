@@ -1,38 +1,57 @@
-using Microsoft.AspNetCore.Authorization;
+// Controllers/AdminController.cs
+//
+// MVC del panel (sólo renderiza vistas Razor).
+// SIN [Authorize] porque usamos JWT-only y los datos del panel
+// se obtienen desde JS llamando a /Api/* con Bearer.
+
+using Grandes_Amigos.Models;
+using Grandes_Amigos.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Grandes_Amigos.Controllers
 {
     [Route("Admin")]
-    [Authorize (Policy = "Ministerio")]
     public class AdminController : Controller
     {
-        [AllowAnonymous]
-        [HttpGet("Login")] // 👈 este permite mostrar el formulario
+        private readonly ContextoDb _ctx;
+
+        public AdminController(ContextoDb ctx)
+        {
+            _ctx = ctx;
+        }
+
+        // GET /Admin/Login
+        [HttpGet("Login")]
         public IActionResult Login()
         {
-            return View();
+            return View("~/Views/Admin/Login.cshtml");
         }
 
-        [Obsolete("Reemplazado por /Api/Usuarios/Login, pero guardado por si acaso.")]
-        [HttpPost("Login")] // 👈 este procesa el formulario
-        public IActionResult Login(string username, string password)
-        {
-            if (username == "admin" && password == "1234")
-            {
-                return RedirectToAction("Dashboard");
-            }
+        // /Admin → redirige al Dashboard
+        [HttpGet("")]
+        public IActionResult Index() => RedirectToAction(nameof(Dashboard));
 
-            ViewBag.Error = "Credenciales inválidas";
-            return View();
-        }
-
-        [Obsolete("Transferido a /Api/Admin/Dashboard.")]
+        // GET /Admin/Dashboard
         [HttpGet("Dashboard")]
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            // 🔓 Acceso libre mientras trabajo en el front
-            return View();
+            // Si no querés cargar nada desde servidor, podés
+            // pasar null y que JS llene todo con la API.
+            var vm = new DashboardViewModel
+            {
+                TotalUsuarios = await _ctx.Usuarios.CountAsync(),
+                TotalEventos = await _ctx.Eventos.CountAsync(),
+                EventosRecientes = await _ctx
+                    .Eventos.OrderByDescending(e => e.Fecha)
+                    .Take(5)
+                    .ToListAsync(),
+            };
+            return View("~/Views/Admin/Dashboard.cshtml", vm);
         }
+
+        // GET /Admin/Usuarios
+        [HttpGet("Usuarios")]
+        public IActionResult Usuarios() => View("~/Views/Admin/Usuarios.cshtml");
     }
 }

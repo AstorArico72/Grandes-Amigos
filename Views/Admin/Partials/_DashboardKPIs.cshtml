@@ -1,16 +1,49 @@
 @model Grandes_Amigos.Models.ViewModels.DashboardViewModel
 
 <div class="row g-3 mb-4">
-    <div class="col-md-6 col-xl-3">
-        <div class="kpi rounded-3 p-3">
-            <div class="small text-secondary">Usuarios Registrados</div>
-            <div class="fs-3 fw-semibold">@Model.TotalUsuarios</div>
+    <div class="col-12 col-md-4">
+        <div class="card text-bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="small text-uppercase opacity-75">Usuarios</div>
+                        <div class="fs-3 fw-bold">
+                            <span id="kpiUsuarios">@Model.TotalUsuarios</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-people fs-1 opacity-50"></i>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="kpi rounded-3 p-3">
-            <div class="small text-secondary">Eventos Activos</div>
-            <div class="fs-3 fw-semibold">@Model.TotalEventos</div>
+
+    <div class="col-12 col-md-4">
+        <div class="card text-bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="small text-uppercase opacity-75">Eventos</div>
+                        <div class="fs-3 fw-bold">
+                            <span id="kpiEventos">@Model.TotalEventos</span>
+                        </div>
+                    </div>
+                    <i class="bi bi-calendar-event fs-1 opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="card text-bg-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="small text-uppercase opacity-75">Sesión</div>
+                        <div class="fs-3 fw-bold"><span id="kpiSesion">—</span></div>
+                    </div>
+                    <i class="bi bi-person-badge fs-1 opacity-50"></i>
+                </div>
+            </div>
         </div>
     </div>
 </div>

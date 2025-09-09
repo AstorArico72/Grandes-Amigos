@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,22 +42,15 @@ builder.Services.AddDbContext<ContextoDb>(options =>
 );
 
 /* =========================
-   AUTENTICACIÓN: COOKIE + JWT
+   AUTENTICACIÓN: SOLO JWT
    ========================= */
 builder
     .Services.AddAuthentication(options =>
     {
-        // Por defecto usamos Cookies para MVC (panel admin).
-        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    })
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Admin/Login"; // Redirección al login del panel
-        options.AccessDeniedPath = "/Admin/Login";
-        options.SlidingExpiration = true;
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        // Todo se autentica con JWT (no cookies)
+        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
     .AddJwtBearer(options =>
     {
@@ -84,8 +76,8 @@ builder
 /* =========================
    AUTORIZACIÓN (POLÍTICAS)
    =========================
-   - "Ministerio": acepta cookie (panel) y JWT (API con [Authorize(AuthenticationSchemes=JwtBearerDefaults.AuthenticationScheme, Policy="Ministerio")])
-   - "Usuario": sólo JWT (público autenticado)
+   - "Ministerio": SOLO JWT (panel consumirá APIs con Bearer desde JS)
+   - "Usuario":    SOLO JWT (público autenticado)
 */
 builder.Services.AddAuthorization(options =>
 {
@@ -95,10 +87,7 @@ builder.Services.AddAuthorization(options =>
         {
             policy.RequireRole("Ministerio");
             policy.RequireClaim(ClaimTypes.Role, "Ministerio");
-            policy.AddAuthenticationSchemes(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                JwtBearerDefaults.AuthenticationScheme
-            );
+            policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
         }
     );
 
