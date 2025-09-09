@@ -164,8 +164,12 @@ public class UsuariosController : Controller
         Summary = "Permite al usuario restablecer su clave.",
         Description = "Genera un token de reinicio, y envía un enlace al usuario conteniendo dicho token."
     )]
+    [SwaggerResponse(200, "Se envió el correo de recuperación.")]
+    [SwaggerResponse(400, "Se ingresó una dirección de correo no registrada.")]
+    [SwaggerResponse(500, "Ocurrió un error.")]
     //Éste endpoint tendría que ser llamado desde un botón "Clave olvidada" o algo así.
-    public async Task<IActionResult> ClaveOlvidada([FromForm] string correo) {
+    public async Task<IActionResult> ClaveOlvidada([FromForm] string correo)
+    {
         try
         {
             Usuario? UsuarioSeleccionado = await Contexto.Usuarios.FirstOrDefaultAsync(item => item.Correo == correo);
@@ -196,29 +200,62 @@ public class UsuariosController : Controller
             Contexto.Tokens.Add(NuevoToken);
 
             //Ésto genera el correo de recuperación y lo envía.
-            var Mensaje = new MimeKit.MimeMessage ();
-            Mensaje.To.Add (new MailboxAddress (UsuarioSeleccionado.Nombre, UsuarioSeleccionado.Correo));
-            Mensaje.From.Add (new MailboxAddress ("Grandes Amigos", Config["Correo:UsuarioSMTP"]));
+            var Mensaje = new MimeKit.MimeMessage();
+            Mensaje.To.Add(new MailboxAddress(UsuarioSeleccionado.Nombre, UsuarioSeleccionado.Correo));
+            Mensaje.From.Add(new MailboxAddress("Grandes Amigos", Config["Correo:UsuarioSMTP"]));
             Mensaje.Subject = "Reinicio de contraseña";
-            TextPart HtmlMensaje = new TextPart ("html"){
+            TextPart HtmlMensaje = new TextPart("html")
+            {
                 //El enlace enviado por correo contiene el token sin convertir a hash, que después se coteja con el token convertido a hash en la BD.
                 Text = @$"
                 <h1>Saludos</h1>
                 <p>{UsuarioSeleccionado.Nombre}, éste correo fue enviado porque hubo una solicitud para recuperar acceso a tu cuenta. Si tú hiciste ésa solicitud, <a href='https://127.0.0.1:5020/Api/Usuarios/RecuperarCuenta?TokenRecuperacion={TokenSinHash}'> entra aquí </a> para poder cambiar la clave.</p>
                 <h4> El enlace provisto es válido por 10 minutos. </h4>"
-                };
+            };
             Mensaje.Body = HtmlMensaje;
-            SmtpClient ClienteSMTP = new SmtpClient ();
+            SmtpClient ClienteSMTP = new SmtpClient();
             //Pendiente: Ver si la ULP tiene un servidor SMTP (o IMAP, o POP3), y usar éso en lugar de un proveedor externo.
-            ClienteSMTP.Connect ("", 25, false);
-            ClienteSMTP.Authenticate (Config["Correo:UsuarioSMTP"], Config["Correo:ClaveSMTP"]);
-            await ClienteSMTP.SendAsync (Mensaje);
+            ClienteSMTP.Connect("", 25, false);
+            ClienteSMTP.Authenticate(Config["Correo:UsuarioSMTP"], Config["Correo:ClaveSMTP"]);
+            await ClienteSMTP.SendAsync(Mensaje);
 
             await Contexto.SaveChangesAsync();
             return Ok("Revisa tu correo, allí recibirás tu nueva contraseña.");
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             return StatusCode(500, ex);
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpGet("RecuperarCuenta")]
+    [SwaggerOperation(
+        Summary = "Autoriza al usuario a cambiar su clave.",
+        Description = "Revisa si el enlace tiene un token válido, y si lo es, permite el cambio de contraseña."
+    )]
+    [SwaggerResponse(400, "El token está vacío o es inválido.")]
+    public IActionResult RecuperarCuenta([FromQuery(Name = "TokenRecuperación")] string token)
+    {
+        DateTime HoraDeIngreso = DateTime.Now;
+        string TokenHash = Convert.ToBase64String(
+            KeyDerivation.Pbkdf2(
+            password: token, //Convierte el token del query string a un hash.
+            salt: System.Text.Encoding.UTF8.GetBytes(Config["Salt"]),
+            prf: KeyDerivationPrf.HMACSHA1,
+            iterationCount: 100,
+            numBytesRequested: 64
+            )
+        );
+        Recuperación? TokenTemporal = Contexto.Tokens.Find(TokenHash);
+
+        if (TokenTemporal != null && DateTime.Compare(HoraDeIngreso, TokenTemporal.Válido_Hasta) == -1)
+        {
+            return Ok(); //Ésto debería redirigir a la vista de cambiar contraseña.
+        }
+        else
+        {
+            return BadRequest("Token inválido.");
         }
     }
     
