@@ -1,14 +1,15 @@
 // Controllers/AdminApiController.cs
 //
 // Controlador de API para endpoints de administración.
-// ⚠️ Importante: Este controlador NO debe devolver Views ni hacer RedirectToAction.
-//                 Devuelve JSON (Ok/BadRequest/etc.).
-//
+// ⚠️ NO devuelve Views ni hace RedirectToAction: responde JSON.
 // Rutas base: /Api/Admin/*
+// - POST /Api/Admin/Nuevo   → alta de administrador (hash de clave)
+// - POST /Api/Admin/Login   → valida credenciales y devuelve { token, admin }
+// - GET  /Api/Admin/Kpis    → KPIs para el dashboard (protegido)
 //
 // Requisitos:
-// - Política "Ministerio" configurada en Program.cs para proteger endpoints sensibles.
-// - IConfiguration con Salt y JWT keys.
+// - Política "Ministerio" en Program.cs para proteger endpoints sensibles.
+// - IConfiguration con Salt y claves JWT.
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -26,6 +27,7 @@ namespace Grandes_Amigos.Api
     [ApiController]
     [ApiVersionNeutral]
     [Route("/Api/Admin")]
+    [Produces("application/json")]
     public class AdminApiController : Controller
     {
         private readonly ContextoDb _ctx;
@@ -43,15 +45,15 @@ namespace Grandes_Amigos.Api
             _logger = logger;
         }
 
-        // -----------------------------
+        // --------------------------------------------------------------------
         // POST /Api/Admin/Nuevo
-        // Crea un administrador nuevo
-        // -----------------------------
+        // Crea un administrador nuevo (tabla administradores).
+        // --------------------------------------------------------------------
         [AllowAnonymous]
         [HttpPost("Nuevo")]
         [SwaggerOperation(
             Summary = "Crea un administrador",
-            Description = "Registra un nuevo admin con clave hasheada."
+            Description = "Registra un nuevo admin con clave hasheada (PBKDF2)."
         )]
         [SwaggerResponse(201, "Administrador creado")]
         [SwaggerResponse(400, "Datos inválidos")]
@@ -64,7 +66,7 @@ namespace Grandes_Amigos.Api
             if (string.IsNullOrEmpty(salt))
                 return StatusCode(500, "Falta configurar 'Salt' en appsettings.");
 
-            // Hash de la clave
+            // Hash PBKDF2 (HMACSHA256, 4096 iteraciones, 256 bits)
             nuevo.Clave = Convert.ToBase64String(
                 KeyDerivation.Pbkdf2(
                     password: nuevo.Clave,
@@ -80,10 +82,11 @@ namespace Grandes_Amigos.Api
             return StatusCode(201);
         }
 
-        // -----------------------------
+        // --------------------------------------------------------------------
         // POST /Api/Admin/Login
-        // Autentica y devuelve JWT
-        // -----------------------------
+        // Autentica y devuelve JWT + datos públicos del admin.
+        // (Compatible con admin-login.js vía fetch: responde JSON)
+        // --------------------------------------------------------------------
         [AllowAnonymous]
         [HttpPost("Login")]
         [SwaggerOperation(
@@ -128,6 +131,7 @@ namespace Grandes_Amigos.Api
                 new Claim("IdMinisterio", admin.IdMinisterio.ToString()),
             };
 
+            // Clave JWT
             var jwtKey = _cfg["TokenAuthentication:SecretKey"] ?? _cfg["JwtKey"];
             if (string.IsNullOrEmpty(jwtKey))
                 return StatusCode(
@@ -137,6 +141,7 @@ namespace Grandes_Amigos.Api
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
             var token = new JwtSecurityToken(
                 issuer: _cfg["TokenAuthentication:Issuer"] ?? "GrandesAmigos",
                 audience: _cfg["TokenAuthentication:Audience"] ?? "GrandesAmigos",
@@ -144,18 +149,19 @@ namespace Grandes_Amigos.Api
                 expires: DateTime.Now.AddHours(12),
                 signingCredentials: creds
             );
+
             var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-            // ✅ API devuelve JSON (NO redirect)
+            // ✅ API responde JSON (para fetch de admin-login.js)
             return Ok(
                 new { token = tokenString, admin = new { admin.NombreUsuario, admin.IdMinisterio } }
             );
         }
 
-        // -----------------------------
+        // --------------------------------------------------------------------
         // GET /Api/Admin/Kpis
-        // KPI simples para el dashboard (opcional)
-        // -----------------------------
+        // KPI simples para el dashboard (protegido por la policy "Ministerio")
+        // --------------------------------------------------------------------
         [Authorize(Policy = "Ministerio")]
         [HttpGet("Kpis")]
         [SwaggerOperation(

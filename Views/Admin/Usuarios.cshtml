@@ -11,23 +11,25 @@
                 <button id="btnRefrescarUsuarios" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-arrow-repeat"></i> Refrescar
                 </button>
-                <button id="btnNuevoUsuario" class="btn btn-primary btn-sm">
+
+                <!-- abre el modal -->
+                <button id="btnNuevoUsuario" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#usuario-modal">
                     <i class="bi bi-person-plus"></i> Nuevo
                 </button>
             </div>
 
             <div class="table-responsive">
                 <table class="table align-middle">
-                    <thead>
+                    <thead class="table-light">
                         <tr>
-                            <th>DNI</th>
                             <th>Nombre</th>
+                            <th>Documento</th>
                             <th>Correo</th>
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="tbodyUsuarios">
-                        <!-- Se llena por JS -->
+                    <tbody id="tabla-usuarios-body">
+                        <!-- Lo llena usuarios.js -->
                     </tbody>
                 </table>
             </div>
@@ -35,7 +37,69 @@
     </div>
 </div>
 
+<!-- Modal: crear usuario (usuarios de la página pública, tabla `usuarios`) -->
+<div class="modal fade" id="usuario-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-usuario" class="modal-content">
+            <div class="modal-header">
+                <h5 id="modal-titulo" class="modal-title">Nuevo Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo Doc.</label>
+                        <select name="TipoDocumento" class="form-select" required>
+                            <option value="DNI">DNI</option>
+                            <option value="LE">LE</option>
+                            <option value="LC">LC</option>
+                            <option value="DMY">DMY</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">N° Documento</label>
+                        <input id="NumDocumentoInput" name="NumDocumento" class="form-control" required />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Nombre</label>
+                        <input name="Nombre" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Correo</label>
+                        <input name="Correo" type="email" class="form-control" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono</label>
+                        <!-- ¡OJO! El modelo usa propiedad con acento: Teléfono -->
+                        <input name="Teléfono" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Asociación</label>
+                        <!-- Otra propiedad con acento: Asociación -->
+                        <input name="Asociación" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Clave</label>
+                        <input name="Clave" type="password" class="form-control" autocomplete="new-password" required />
+                        <div class="form-text">Se hashea en el servidor (no enviar hash).</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-primary" type="submit">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @section Scripts {
-    <script src="~/js/admin.js" asp-append-version="true"></script>
     <script src="~/js/usuarios.js" asp-append-version="true"></script>
 }

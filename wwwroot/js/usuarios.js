@@ -1,139 +1,159 @@
-document.addEventListener('DOMContentLoaded', function () {
+// wwwroot/js/usuarios.js
+// Lista, crea y elimina USUARIOS (públicos, tabla `usuarios`)
+// Requiere: SweetAlert2 + Bootstrap JS (ya cargados en el layout del admin).
+
+document.addEventListener('DOMContentLoaded', () => {
+	// === Helpers ==============================================================
 	const token = localStorage.getItem('adminToken');
-	const authHeaders = {
-		Authorization: `Bearer ${token}`,
+	const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+	const $ = (sel) => document.querySelector(sel);
+	const tbody = $('#tabla-usuarios-body');
+	const form = $('#form-usuario');
+	const modalEl = document.getElementById('usuario-modal');
+	const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+
+	// Devuelve la primera propiedad definida (soporta nombres con y sin acentos)
+	const pick = (obj, ...keys) => {
+		for (const k of keys) if (obj && obj[k] !== undefined) return obj[k];
+		return '';
 	};
 
-	const modalElement = document.getElementById('usuario-modal');
-	const usuarioModal = new bootstrap.Modal(modalElement);
-	const formUsuario = document.getElementById('form-usuario');
-	const tablaUsuariosBody = document.getElementById('tabla-usuarios-body');
+	// Muestra mensaje de error en tabla
+	const showRowError = (msg) => {
+		tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${msg}</td></tr>`;
+	};
 
-	// --- FUNCIÓN PRINCIPAL: Cargar y mostrar todos los usuarios ---
+	// === Cargar usuarios ======================================================
 	async function cargarUsuarios() {
-		tablaUsuariosBody.innerHTML =
+		tbody.innerHTML =
 			'<tr><td colspan="4" class="text-center">Cargando...</td></tr>';
 
 		try {
-			const response = await fetch('/Api/Usuarios/Todos', {
-				headers: authHeaders,
-			});
-			if (!response.ok) {
-				throw new Error(
-					`Error ${response.status}: No se pudo obtener la lista de usuarios.`
-				);
+			const res = await fetch('/Api/Usuarios/Todos', { headers: authHeaders });
+			if (res.status === 401) {
+				showRowError('Sesión inválida. Volvé a iniciar sesión.');
+				return;
 			}
-			const usuarios = await response.json();
+			if (!res.ok) throw new Error(`Error ${res.status} al obtener usuarios`);
 
-			tablaUsuariosBody.innerHTML = ''; // Limpiar la tabla antes de llenar
-			if (usuarios.length === 0) {
-				tablaUsuariosBody.innerHTML =
+			const lista = await res.json();
+			tbody.innerHTML = '';
+
+			if (!Array.isArray(lista) || lista.length === 0) {
+				tbody.innerHTML =
 					'<tr><td colspan="4" class="text-center">No hay usuarios registrados.</td></tr>';
-			} else {
-				usuarios.forEach((user) => {
-					const fila = `
-                        <tr>
-                            <td>${user.nombre}</td>
-                            <td>${user.tipoDocumento} ${user.numDocumento}</td>
-                            <td>${user.correo}</td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${user.numDocumento}" data-nombre="${user.nombre}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>`;
-					tablaUsuariosBody.insertAdjacentHTML('beforeend', fila);
-				});
+				return;
 			}
-		} catch (error) {
-			console.error('Error al cargar usuarios:', error);
-			tablaUsuariosBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${error.message}</td></tr>`;
+
+			for (const u of lista) {
+				const nombre = pick(u, 'nombre', 'Nombre');
+				const tipoDoc = pick(u, 'tipoDocumento', 'TipoDocumento');
+				const numDoc = pick(u, 'numDocumento', 'NumDocumento');
+				const correo = pick(u, 'correo', 'Correo');
+
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+          <td>${nombre}</td>
+          <td>${tipoDoc || ''} ${numDoc || ''}</td>
+          <td>${correo}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-danger btn-eliminar" data-id="${numDoc}" data-nombre="${nombre}">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>`;
+				tbody.appendChild(tr);
+			}
+		} catch (err) {
+			console.error(err);
+			showRowError(err.message || 'No se pudo cargar la lista.');
 		}
 	}
 
-	// --- MANEJO DEL FORMULARIO (Crear Usuario) ---
-	formUsuario.addEventListener('submit', async function (event) {
-		event.preventDefault();
+	// === Crear usuario ========================================================
+	if (form) {
+		form.addEventListener('submit', async (ev) => {
+			ev.preventDefault();
+			const data = new FormData(form); // nombres del form = propiedades del modelo
 
-		const formData = new FormData(formUsuario);
+			try {
+				const res = await fetch('/Api/Usuarios/Nuevo', {
+					method: 'POST',
+					headers: authHeaders, // no seteamos Content-Type, lo pone el navegador
+					body: data,
+				});
 
-		// El endpoint de tu controlador espera los datos de un formulario [FromForm]
-		// y se encarga del hashing de la clave en el backend.
-		try {
-			const response = await fetch('/Api/Usuarios/Nuevo', {
-				method: 'POST',
-				headers: { ...authHeaders }, // Solo el token, el Content-Type lo pone el navegador
-				body: formData,
-			});
-
-			if (response.ok) {
-				Swal.fire(
-					'¡Éxito!',
-					'El usuario ha sido creado correctamente.',
-					'success'
-				);
-				usuarioModal.hide(); // Ocultar el modal
-				cargarUsuarios(); // Recargar la lista de usuarios
-			} else {
-				const errorTexto = await response.text();
-				throw new Error(errorTexto || 'No se pudo crear el usuario.');
-			}
-		} catch (error) {
-			Swal.fire('Error', error.message, 'error');
-		}
-	});
-
-	// Limpiar el formulario cuando se abre el modal para un nuevo usuario
-	modalElement.addEventListener('show.bs.modal', function () {
-		formUsuario.reset();
-		document.getElementById('modal-titulo').textContent = 'Nuevo Usuario';
-		// Habilitar el campo NumDocumentoInput por si se deshabilitó en un modo de edición futuro
-		document.getElementById('NumDocumentoInput').disabled = false;
-	});
-
-	// --- MANEJO DE ELIMINACIÓN DE USUARIOS ---
-	tablaUsuariosBody.addEventListener('click', function (event) {
-		const botonEliminar = event.target.closest('.btn-eliminar');
-		if (botonEliminar) {
-			const userId = botonEliminar.dataset.id;
-			const userName = botonEliminar.dataset.nombre;
-
-			Swal.fire({
-				title: `¿Estás seguro?`,
-				text: `¡No podrás revertir la eliminación de ${userName}!`,
-				icon: 'warning',
-				showCancelButton: true,
-				confirmButtonColor: '#d33',
-				cancelButtonColor: '#3085d6',
-				confirmButtonText: 'Sí, ¡eliminar!',
-				cancelButtonText: 'Cancelar',
-			}).then(async (result) => {
-				if (result.isConfirmed) {
-					try {
-						const response = await fetch(`/Api/Usuarios/Borrar/${userId}`, {
-							method: 'DELETE',
-							headers: authHeaders,
-						});
-
-						if (response.ok) {
-							Swal.fire(
-								'¡Eliminado!',
-								'El usuario ha sido eliminado.',
-								'success'
-							);
-							cargarUsuarios(); // Recargar la lista
-						} else {
-							const errorTexto = await response.text();
-							throw new Error(errorTexto || 'No se pudo eliminar el usuario.');
-						}
-					} catch (error) {
-						Swal.fire('Error', error.message, 'error');
-					}
+				if (!res.ok) {
+					const txt = await res.text();
+					throw new Error(txt || 'No se pudo crear el usuario.');
 				}
-			});
+
+				Swal.fire('¡Éxito!', 'El usuario fue creado.', 'success');
+				modal && modal.hide();
+				form.reset();
+				cargarUsuarios();
+			} catch (err) {
+				Swal.fire(
+					'Error',
+					err.message || 'Fallo al crear el usuario.',
+					'error'
+				);
+			}
+		});
+
+		// Al abrir el modal, limpiamos el form
+		modalEl?.addEventListener('show.bs.modal', () => {
+			form.reset();
+			document.getElementById('NumDocumentoInput')?.removeAttribute('disabled');
+			const title = document.getElementById('modal-titulo');
+			if (title) title.textContent = 'Nuevo Usuario';
+		});
+	}
+
+	// === Eliminar usuario =====================================================
+	tbody?.addEventListener('click', async (ev) => {
+		const btn = ev.target.closest('.btn-eliminar');
+		if (!btn) return;
+
+		const id = btn.dataset.id;
+		const nombre = btn.dataset.nombre || '';
+
+		const ok = await Swal.fire({
+			title: '¿Eliminar usuario?',
+			text: `Esta acción no se puede deshacer. ${nombre ? `(${nombre})` : ''}`,
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonText: 'Sí, eliminar',
+			cancelButtonText: 'Cancelar',
+		}).then((r) => r.isConfirmed);
+
+		if (!ok) return;
+
+		try {
+			const res = await fetch(
+				`/Api/Usuarios/Borrar/${encodeURIComponent(id)}`,
+				{
+					method: 'DELETE',
+					headers: authHeaders,
+				}
+			);
+			if (!res.ok) {
+				const txt = await res.text();
+				throw new Error(txt || 'No se pudo eliminar.');
+			}
+			Swal.fire('Eliminado', 'El usuario fue eliminado.', 'success');
+			cargarUsuarios();
+		} catch (err) {
+			Swal.fire('Error', err.message || 'Fallo al eliminar.', 'error');
 		}
 	});
 
-	// --- Carga inicial de datos ---
+	// === Botones UI ===========================================================
+	document
+		.getElementById('btnRefrescarUsuarios')
+		?.addEventListener('click', cargarUsuarios);
+	// El botón "Nuevo" abre el modal con data-bs-toggle (no necesita JS extra)
+
+	// === Carga inicial ========================================================
 	cargarUsuarios();
 });
