@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 03-07-2025 a las 01:24:43
+-- Tiempo de generación: 09-09-2025 a las 22:22:31
 -- Versión del servidor: 10.4.21-MariaDB
 -- Versión de PHP: 8.0.10
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `Grandes_Amigos`
 --
-CREATE DATABASE IF NOT EXISTS `Grandes_Amigos` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin;
-USE `Grandes_Amigos`;
 
 -- --------------------------------------------------------
 
@@ -30,19 +28,20 @@ USE `Grandes_Amigos`;
 --
 
 CREATE TABLE `Administradores` (
-  `ID` int(10) UNSIGNED NOT NULL,
+  `ID` int(9) UNSIGNED NOT NULL,
   `Nombre_Usuario` varchar(255) COLLATE utf8_bin NOT NULL,
   `Clave` varchar(100) COLLATE utf8_bin NOT NULL,
-  `ID_Ministerio` int(10) UNSIGNED NOT NULL
+  `ID_Ministerio` int(10) UNSIGNED NOT NULL,
+  `Email` varchar(100) COLLATE utf8_bin NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
 -- Volcado de datos para la tabla `Administradores`
 --
 
-INSERT INTO `Administradores` (`ID`, `Nombre_Usuario`, `Clave`, `ID_Ministerio`) VALUES
-(1, 'Dummy', 'Lm3qrNTqMvJuUsvtB20NUItRh//9VjZjeqAoqA1G1G4=', 1),
-(2, 'DMY', 'q/sMjWB73dxjPRaYObCucPVt0ubfG/iZ+fMIrPN6pmc=', 1);
+INSERT INTO `Administradores` (`ID`, `Nombre_Usuario`, `Clave`, `ID_Ministerio`, `Email`) VALUES
+(1, 'Dummy', 'Lm3qrNTqMvJuUsvtB20NUItRh//9VjZjeqAoqA1G1G4=', 1, 'dummy@example.net'),
+(2, 'DMY', 'q/sMjWB73dxjPRaYObCucPVt0ubfG/iZ+fMIrPN6pmc=', 1, 'dmy@example.net');
 
 -- --------------------------------------------------------
 
@@ -84,8 +83,9 @@ CREATE TABLE `Inscripciones` (
 --
 
 INSERT INTO `Inscripciones` (`ID`, `ID_Evento`, `ID_Inscrito`) VALUES
-(1, 2, 3972),
-(2, 2, 0);
+(2, 2, 0),
+(5, 1, 16777216),
+(6, 2, 16777216);
 
 -- --------------------------------------------------------
 
@@ -146,13 +146,26 @@ INSERT INTO `Noticias` (`ID`, `Título`, `Autor`, `Enlace`, `Fecha_Publicación`
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `Recuperación`
+--
+
+CREATE TABLE `Recuperación` (
+  `Token_Recuperación` varchar(64) COLLATE utf8_bin NOT NULL,
+  `ID_Usuario` int(9) UNSIGNED NOT NULL,
+  `Válido_Hasta` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `Rol` varchar(6) COLLATE utf8_bin NOT NULL COMMENT 'Sirve para diferenciar si quien intenta recuperar el acceso es o no un admin. Como los usuarios van a tener IDs de 6-8 dígitos, y los admins de 3 como máximo, no es necesario tener una tabla aparte.'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `Usuarios`
 --
 
 CREATE TABLE `Usuarios` (
   `Num_Documento` int(9) UNSIGNED NOT NULL COMMENT 'No es auto-incremental porque aquí va el número de DNI/LC/LE.',
   `Tipo_Documento` varchar(3) COLLATE utf8_bin NOT NULL COMMENT 'Aquí van abreviaciones como "DNI", "LE", y "LC".',
-  `Correo` varchar(100) COLLATE utf8_bin NOT NULL COMMENT 'Pendiente: Acordar si es "nuleable" o no.',
+  `Correo` varchar(100) COLLATE utf8_bin NOT NULL,
   `Teléfono` varchar(14) COLLATE utf8_bin NOT NULL COMMENT '"+54 9 123 456 7890" son 14 caracteres.',
   `Asociación` varchar(255) COLLATE utf8_bin NOT NULL COMMENT 'Pendiente: Definir si ésta columna debería hacer referencia a otra tabla.',
   `Nombre` varchar(255) COLLATE utf8_bin NOT NULL,
@@ -165,10 +178,10 @@ CREATE TABLE `Usuarios` (
 
 INSERT INTO `Usuarios` (`Num_Documento`, `Tipo_Documento`, `Correo`, `Teléfono`, `Asociación`, `Nombre`, `Clave`) VALUES
 (0, 'DMY', 'dummy@example.net', '+5492651412843', 'Dummy', 'Dummy', ''),
-(3972, 'DMY', 'dummy@example.net', '555-1001', 'Dummies United', 'Dummy Johnson', ''),
 (7239, 'DMY', 'arico@example.net', '+5492664685713', 'Dummies United', 'Arico', 'V4IFiWi9MARvwypeqBXVM5UwwALAO8NUVj9gWNlQntc='),
 (1234567, 'LC', 'jperez@example.net', '+549000123456', 'DOSEP', 'Juan Pérez', 'dfsHw8czf3xXR7STWqG/gxwcEkw4N4igQ5BZTbc/RC0='),
-(5000100, 'LE', 'mgonzales@example.net', '+549876543210', 'Gonzales', 'María Gonzales', 'xPQZMDwp20TC+pLLviRBLrVkZ3HNkHYVBahvGmdNiTY=');
+(7654321, 'DNI', 'peres@example.net', '1190988776', 'Dummies United', 'Pedro Peres', 'U/L8KiKHEUaFFE+NocB0ayn2nn/UUEWWTVtZe3uJQGg='),
+(16777216, 'DNI', 'dumdum@example.com', '1009885590', 'Dummies United', 'Test Dummy', '77JpPI3KMeUPKLhGplPQQKPcc/uEgFC+wNv0DjI7Aqw=');
 
 --
 -- Índices para tablas volcadas
@@ -180,6 +193,7 @@ INSERT INTO `Usuarios` (`Num_Documento`, `Tipo_Documento`, `Correo`, `Teléfono`
 ALTER TABLE `Administradores`
   ADD PRIMARY KEY (`ID`),
   ADD UNIQUE KEY `NombreUsuario` (`Nombre_Usuario`),
+  ADD UNIQUE KEY `Correo-Admin` (`Email`),
   ADD KEY `ID_Ministerio` (`ID_Ministerio`);
 
 --
@@ -210,10 +224,18 @@ ALTER TABLE `Noticias`
   ADD PRIMARY KEY (`ID`);
 
 --
+-- Indices de la tabla `Recuperación`
+--
+ALTER TABLE `Recuperación`
+  ADD PRIMARY KEY (`Token_Recuperación`),
+  ADD KEY `ID_Usuario` (`ID_Usuario`);
+
+--
 -- Indices de la tabla `Usuarios`
 --
 ALTER TABLE `Usuarios`
-  ADD PRIMARY KEY (`Num_Documento`);
+  ADD PRIMARY KEY (`Num_Documento`),
+  ADD UNIQUE KEY `Correo-Usuario` (`Correo`) USING BTREE;
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -223,7 +245,7 @@ ALTER TABLE `Usuarios`
 -- AUTO_INCREMENT de la tabla `Administradores`
 --
 ALTER TABLE `Administradores`
-  MODIFY `ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(9) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `Eventos`
@@ -235,7 +257,7 @@ ALTER TABLE `Eventos`
 -- AUTO_INCREMENT de la tabla `Inscripciones`
 --
 ALTER TABLE `Inscripciones`
-  MODIFY `ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `Ministerios`
@@ -269,8 +291,15 @@ ALTER TABLE `Eventos`
 -- Filtros para la tabla `Inscripciones`
 --
 ALTER TABLE `Inscripciones`
-  ADD CONSTRAINT `Evento-Inscripción` FOREIGN KEY (`ID_Evento`) REFERENCES `Eventos` (`ID`),
-  ADD CONSTRAINT `Inscrito-Inscripción` FOREIGN KEY (`ID_Inscrito`) REFERENCES `Usuarios` (`Num_Documento`);
+  ADD CONSTRAINT `Evento-Inscripción` FOREIGN KEY (`ID_Evento`) REFERENCES `Eventos` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `Inscrito-Inscripción` FOREIGN KEY (`ID_Inscrito`) REFERENCES `Usuarios` (`Num_Documento`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `Recuperación`
+--
+ALTER TABLE `Recuperación`
+  ADD CONSTRAINT `Admin-Recuperación` FOREIGN KEY (`ID_Usuario`) REFERENCES `Administradores` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `Recuperación_ibfk_1` FOREIGN KEY (`ID_Usuario`) REFERENCES `Usuarios` (`Num_Documento`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
