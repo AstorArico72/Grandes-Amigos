@@ -10,10 +10,18 @@ public class NoticiaService : INoticiaService
         _contexto = contexto;
     }
 
+    public async Task<List<Noticia>> GetNoticiasSaludAsync()
+    {
+        return await _contexto
+            .Noticias.Where(n => n.Categoría == "Política")
+            .OrderByDescending(n => n.FechaPublicación)
+            .ToListAsync();
+    }
+
     public async Task<List<Noticia>> GetNoticiasDeporteAsync()
     {
         return await _contexto
-            .Noticias.Where(n => n.Categoría == "Nutrición")
+            .Noticias.Where(n => n.Categoría == "Política")
             .OrderByDescending(n => n.FechaPublicación)
             .ToListAsync();
     }
@@ -22,14 +30,6 @@ public class NoticiaService : INoticiaService
     {
         return await _contexto
             .Noticias.Where(n => n.Categoría == "Política")
-            .OrderByDescending(n => n.FechaPublicación)
-            .ToListAsync();
-    }
-
-    public async Task<List<Noticia>> GetNoticiasSaludAsync()
-    {
-        return await _contexto
-            .Noticias.Where(n => n.Categoría == "Casas y Departamentos")
             .OrderByDescending(n => n.FechaPublicación)
             .ToListAsync();
     }

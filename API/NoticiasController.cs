@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Mime;
 using System.ServiceModel.Syndication;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Grandes_Amigos.Models;
@@ -59,7 +60,7 @@ public class NoticiasController : Controller
     [SwaggerResponse(502, "El servidor de noticias está caído o devolvió una respuesta inválida.")]
     public IActionResult CargarNoticias()
     {
-        //Ésto hace un pedido preliminar al proveedor del RSS remoto, para evitar gastar recursos en cargar las noticias si pasa un error.
+        // Pedido preliminar al proveedor del RSS remoto
         LectorRSS = XmlReader.Create("https://www.lanacion.com.ar/arc/outboundfeeds/rss/");
         HttpClient client = new HttpClient();
         HttpRequestMessage message = new HttpRequestMessage();
@@ -69,40 +70,28 @@ public class NoticiasController : Controller
         switch (respuesta)
         {
             case 500:
-                // 500: El servidor devolvió un error genérico.
-                return StatusCode(502, "Error en el servidor de noticias.");
-            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/502
-            // Al leer el RSS del proveedor, nuestro servidor hace de intermediario, por lo que correspondería devolver 502 si se recibe una respuesta inválida, o al menos éso creo.
             case 503:
-                // 503: El servidor está caído.
+            case 204:
                 return StatusCode(502, "Error en el servidor de noticias.");
             case 404:
-                // 404: La URI es inválida.
                 return BadRequest(
                     "El enlace al RSS remoto es inválido - El servidor dió una respuesta HTTP 404."
                 );
             case 403:
-                // 403: La URI es válida, pero el contenido está bloqueado.
                 return BadRequest(
                     "El RSS remoto está bloqueado - El servidor dió una respuesta HTTP 403."
                 );
-            case 204:
-                // 204: La respuesta del servidor está vacía.
-                return StatusCode(502, "Error en el servidor de noticias.");
             case 202:
-                // 202: El servidor aceptó el pedido, pero no lo procesó.
                 return StatusCode(504, "No se recibió respuesta del servidor de noticias.");
             case 200:
-                // 200: El servidor devolvió una respuesta válida.
                 break;
             default:
                 return BadRequest("Error al traer el RSS remoto.");
         }
-        ;
 
         SyndicationFeed Feed = SyndicationFeed.Load(LectorRSS);
 
-        //Ésto trae las noticias de hoy.
+        // Noticias de la última hora
         var UltimasNoticias = Feed
             .Items.Where(item => item.PublishDate >= DateTime.Now.AddHours(-1))
             .ToArray();
@@ -122,46 +111,39 @@ public class NoticiasController : Controller
                 var item = UltimasNoticias[i];
                 Noticia NuevaNoticia = new Noticia();
 
+                // Autor
                 List<SyndicationPerson> Autores = item.Authors.ToList();
-                List<string> NombresAutor = new List<string>();
-
-                foreach (var autor in Autores)
-                {
-                    NombresAutor.Add(autor.Name);
-                }
-
+                List<string> NombresAutor = Autores.Select(a => a.Name).ToList();
                 if (Autores.Count > 1)
-                {
                     NuevaNoticia.Autor = string.Join(", ", NombresAutor);
-                }
                 else
-                {
-                    // Autor seguro
-                    if (NombresAutor.Count > 0)
-                        NuevaNoticia.Autor = NombresAutor.First();
-                    else
-                        NuevaNoticia.Autor = "Desconocido";
-                }
+                    NuevaNoticia.Autor =
+                        NombresAutor.Count > 0 ? NombresAutor.First() : "Desconocido";
 
-                // Enlace seguro
-                if (item.Links.Any())
-                    NuevaNoticia.Enlace = item.Links.First().Uri.AbsoluteUri;
-                else
-                    NuevaNoticia.Enlace = "";
+                // Enlace
+                NuevaNoticia.Enlace = item.Links.Any() ? item.Links.First().Uri.AbsoluteUri : "";
 
-                if (item.Categories.Any())
-                    NuevaNoticia.Categoría = item.Categories.First().Name;
-                else
-                    NuevaNoticia.Categoría = "General";
+                // Categoría
+                NuevaNoticia.Categoría = item.Categories.Any()
+                    ? item.Categories.First().Name
+                    : "General";
 
+                // Datos principales
                 NuevaNoticia.FechaPublicación = item.PublishDate.DateTime;
                 NuevaNoticia.Título = item.Title.Text;
-                NuevaNoticia.Contenido = item.Summary.Text;
+
+                // 🔽 Contenido limpio (sin etiquetas HTML)
+                if (!string.IsNullOrEmpty(item.Summary?.Text))
+                {
+                    NuevaNoticia.Contenido = Regex.Replace(item.Summary.Text, "<.*?>", "").Trim();
+                }
+                else
+                {
+                    NuevaNoticia.Contenido = "";
+                }
 
                 // EXTRAER IMAGEN
                 string? imagenUrl = null;
-
-                // 1. Buscar en extensiones media:content o media:thumbnail
                 var media = item.ElementExtensions.FirstOrDefault(e =>
                     e.OuterName == "content" || e.OuterName == "thumbnail"
                 );
@@ -172,14 +154,10 @@ public class NoticiasController : Controller
                         imagenUrl = attr.Value;
                 }
 
-                // 2. Si no hay extensión, buscar en el contenido HTML
                 if (imagenUrl == null && item.Summary != null)
                 {
                     var html = item.Summary.Text;
-                    var match = System.Text.RegularExpressions.Regex.Match(
-                        html,
-                        "<img.+?src=[\"'](.+?)[\"']"
-                    );
+                    var match = Regex.Match(html, "<img.+?src=[\"'](.+?)[\"']");
                     if (match.Success)
                         imagenUrl = match.Groups[1].Value;
                 }
@@ -200,7 +178,7 @@ public class NoticiasController : Controller
             return StatusCode(500, ex);
         }
 
-        if (exito == false)
+        if (!exito)
         {
             return StatusCode(500, "Error interno.");
         }

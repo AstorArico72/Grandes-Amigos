@@ -211,7 +211,9 @@ namespace Grandes_Amigos.Api
         {
             try
             {
-                Administrador? UsuarioSeleccionado = await _ctx.Admins.FirstOrDefaultAsync(item => item.Email == correo);
+                Administrador? UsuarioSeleccionado = await _ctx.Admins.FirstOrDefaultAsync(item =>
+                    item.Email == correo
+                );
                 if (UsuarioSeleccionado == null)
                 {
                     return BadRequest("La cuenta pedida no existe.");
@@ -240,16 +242,19 @@ namespace Grandes_Amigos.Api
 
                 //Ésto genera el correo de recuperación y lo envía.
                 var Mensaje = new MimeKit.MimeMessage();
-                Mensaje.To.Add(new MailboxAddress(UsuarioSeleccionado.NombreUsuario, UsuarioSeleccionado.Email));
+                Mensaje.To.Add(
+                    new MailboxAddress(UsuarioSeleccionado.NombreUsuario, UsuarioSeleccionado.Email)
+                );
                 Mensaje.From.Add(new MailboxAddress("Grandes Amigos", _cfg["Correo:UsuarioSMTP"]));
                 Mensaje.Subject = "Reinicio de contraseña";
                 TextPart HtmlMensaje = new TextPart("html")
                 {
                     //El enlace enviado por correo contiene el token sin convertir a hash, que después se coteja con el token convertido a hash en la BD.
-                    Text = @$"
+                    Text =
+                        @$"
                 <h1>Saludos</h1>
                 <p>{UsuarioSeleccionado.NombreUsuario}, éste correo fue enviado porque hubo una solicitud para recuperar acceso a tu cuenta. Si tú hiciste ésa solicitud, <a href='https://127.0.0.1:5020/Api/Usuarios/RecuperarCuenta?TokenRecuperacion={TokenSinHash}'> entra aquí </a> para poder cambiar la clave.</p>
-                <h4> El enlace provisto es válido por 10 minutos. </h4>"
+                <h4> El enlace provisto es válido por 10 minutos. </h4>",
                 };
                 Mensaje.Body = HtmlMensaje;
                 SmtpClient ClienteSMTP = new SmtpClient();
@@ -280,16 +285,19 @@ namespace Grandes_Amigos.Api
             DateTime HoraDeIngreso = DateTime.Now;
             string TokenHash = Convert.ToBase64String(
                 KeyDerivation.Pbkdf2(
-                password: token, //Convierte el token del query string a un hash.
-                salt: System.Text.Encoding.UTF8.GetBytes(_cfg["Salt"]),
-                prf: KeyDerivationPrf.HMACSHA1,
-                iterationCount: 100,
-                numBytesRequested: 64
+                    password: token, //Convierte el token del query string a un hash.
+                    salt: System.Text.Encoding.UTF8.GetBytes(_cfg["Salt"]),
+                    prf: KeyDerivationPrf.HMACSHA1,
+                    iterationCount: 100,
+                    numBytesRequested: 64
                 )
             );
             Recuperación? TokenTemporal = _ctx.Tokens.Find(TokenHash);
 
-            if (TokenTemporal != null && DateTime.Compare(HoraDeIngreso, TokenTemporal.Válido_Hasta) == -1)
+            if (
+                TokenTemporal != null
+                && DateTime.Compare(HoraDeIngreso, TokenTemporal.Válido_Hasta) == -1
+            )
             {
                 return Ok(); //Ésto debería redirigir a la vista de cambiar contraseña.
             }
