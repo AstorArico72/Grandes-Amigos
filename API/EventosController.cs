@@ -3,6 +3,7 @@ using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using MySqlConnector;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -38,6 +39,34 @@ public class EventosController : Controller
     {
         List<Evento> Eventos = Contexto.Eventos.ToList();
         return Ok(Eventos);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("PorMinisterio/{Ministerio}")]
+    [SwaggerOperation(
+        Summary = "Lista los eventos de un ministerio.",
+        Description = "Lee todas las entradas de la tabla `Eventos` que están asociadas al ministerio especificado en la ruta."
+    )]
+    [SwaggerResponse(200, "Hay al menos una entrada.")]
+    [SwaggerResponse(404, "El ministerio no existe; o existe, pero no hay eventos asociados.")]
+    public IActionResult PorMinisterio([FromRoute] string Ministerio) {
+        Ministerio? min = Contexto.Ministerios.FirstOrDefault(m => m.Nombre.ToLower() == Ministerio.ToLower()); //Ésto permite entrarlo tanto con o sin mayúsculas.
+        
+        if (min == null)
+        {
+            return NotFound("El ministerio pedido no existe.");
+        }
+
+        List<Evento?> Eventos = Contexto.Eventos.Where(e => e.ID_Ministerio == min.ID).ToList<Evento?>();
+
+        if (Eventos.IsNullOrEmpty())
+        {
+            return NotFound("El ministerio pedido no tiene eventos.");
+        }
+        else
+        {
+            return Ok(Eventos);
+        }
     }
 
     [AllowAnonymous]
