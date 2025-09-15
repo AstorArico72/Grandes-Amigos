@@ -1,0 +1,22 @@
+@model dynamic
+@* Tarjeta individual para cada evento inscrito *@
+
+<div class="col-md-6 col-lg-4">
+    <div class="card h-100 shadow-sm border-0">
+        <img src="@Model.foto" class="card-img-top" alt="@Model.título" style="height: 200px; object-fit: cover;" />
+        <div class="card-body d-flex flex-column">
+            <h5 class="card-title">@Model.título</h5>
+            <p class="card-text text-truncate">@Model.descripcion</p>
+            <div class="mt-auto">
+                <small class="text-muted d-block">
+                    <i class="bi bi-calendar-event"></i>
+                    @DateTime.Parse(Model.fecha.ToString()).ToString("dd/MM/yyyy HH:mm")
+                </small>
+                <small class="text-muted d-block">
+                    <i class="bi bi-people"></i>
+                    Ministerio: @(Model.ministerioNombre ?? Model.id_Ministerio.ToString())
+                </small>
+            </div>
+        </div>
+    </div>
+</div>

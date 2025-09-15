@@ -274,7 +274,11 @@ document.addEventListener('DOMContentLoaded', () => {
 						${nombre}
 					</a>
 					<ul class="dropdown-menu dropdown-menu-end">
-						<li><a class="dropdown-item" href="/Inscripcion/MisEventos">Mis Eventos</a></li>
+						<li>
+						<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#misEventosModal">
+							Mis Eventos
+						</a>
+						</li>
 						<li><a class="dropdown-item text-danger" id="cerrarSesionBtn" href="#">Cerrar Sesión</a></li>
 					</ul>
 				</li>`;
@@ -477,4 +481,85 @@ document.addEventListener('DOMContentLoaded', function () {
 				}
 			});
 		});
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+	const misEventosModal = document.getElementById('misEventosModal');
+
+	if (misEventosModal) {
+		misEventosModal.addEventListener('show.bs.modal', () => {
+			const token = localStorage.getItem('jwt_token_inscrito');
+			if (!token) {
+				document.getElementById(
+					'listaMisEventos'
+				).innerHTML = `<div class="alert alert-warning">Debes iniciar sesión para ver tus eventos.</div>`;
+				return;
+			}
+
+			// Spinner mientras carga
+			document.getElementById('listaMisEventos').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Cargando tus eventos...</p>
+                </div>
+            `;
+
+			fetch('/Api/Eventos/MisEventos', {
+				headers: { Authorization: 'Bearer ' + token },
+			})
+				.then((resp) => {
+					if (!resp.ok) throw new Error('Error al traer tus eventos');
+					return resp.json();
+				})
+				.then((eventos) => {
+					const contenedor = document.getElementById('listaMisEventos');
+					if (!eventos || eventos.length === 0) {
+						contenedor.innerHTML = `<div class="alert alert-info">No estás inscrito en ningún evento.</div>`;
+						return;
+					}
+
+					let html = '';
+					eventos.forEach((ev) => {
+						html += `
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 shadow-sm border-0">
+                                    <img src="${
+																			ev.foto
+																		}" class="card-img-top" alt="${
+							ev.título
+						}" style="height:200px;object-fit:cover;" />
+                                    <div class="card-body d-flex flex-column">
+                                        <h5 class="card-title">${ev.título}</h5>
+                                        <p class="card-text text-truncate">${
+																					ev.descripcion || ''
+																				}</p>
+                                        <div class="mt-auto">
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-calendar-event"></i>
+                                                ${new Date(
+																									ev.fecha
+																								).toLocaleDateString('es-AR')}
+                                            </small>
+                                            <small class="text-muted d-block">
+                                                <i class="bi bi-people"></i>
+                                                Ministerio: ${
+																									ev.ministerioNombre ||
+																									ev.id_Ministerio
+																								}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+					});
+
+					contenedor.innerHTML = html;
+				})
+				.catch((err) => {
+					document.getElementById(
+						'listaMisEventos'
+					).innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+				});
+		});
+	}
 });
