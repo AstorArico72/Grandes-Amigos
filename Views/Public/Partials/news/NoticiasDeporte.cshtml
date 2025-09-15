@@ -6,15 +6,13 @@
         <div id="carouselDeporte" class="carousel slide mt-4" data-bs-ride="carousel">
             <div class="carousel-inner">
                 @{
-                    int noticiasPorSlide = Model.Count < 3 ? 1 : 3;
                     int total = Model.Count;
-                    int grupos = (int)Math.Ceiling((double)total / noticiasPorSlide);
-
+                    int grupos = (int)Math.Ceiling(total / 3.0);
                     for (int i = 0; i < grupos; i++)
                     {
                         <div class="carousel-item @(i == 0 ? "active" : "")">
-                            <div class="row row-cols-1 row-cols-md-@noticiasPorSlide g-4">
-                                @for (int j = i * noticiasPorSlide; j < (i + 1) * noticiasPorSlide && j < total; j++)
+                            <div class="row row-cols-1 row-cols-md-3 g-4">
+                                @for (int j = i * 3; j < (i + 1) * 3 && j < total; j++)
                                 {
                                     <div class="col">
                                         @await Html.PartialAsync("~/Views/Public/Partials/news/Card.cshtml", Model[j])
@@ -26,18 +24,14 @@
                 }
             </div>
 
-            @* Solo mostrar flechas si hay más de una slide *@
-            @if (grupos > 1)
-            {
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselDeporte" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
-                    <span class="visually-hidden">Anterior</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselDeporte" data-bs-slide="next">
-                    <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
-                    <span class="visually-hidden">Siguiente</span>
-                </button>
-            }
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselSalud" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselSalud" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
         </div>
     </div>
 </section>

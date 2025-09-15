@@ -13,7 +13,7 @@ public class NoticiaService : INoticiaService
     public async Task<List<Noticia>> GetNoticiasSaludAsync()
     {
         return await _contexto
-            .Noticias.Where(n => n.Categoría == "Política")
+            .Noticias.Where(n => n.Categoría == "Fútbol")
             .OrderByDescending(n => n.FechaPublicación)
             .ToListAsync();
     }
@@ -21,7 +21,7 @@ public class NoticiaService : INoticiaService
     public async Task<List<Noticia>> GetNoticiasDeporteAsync()
     {
         return await _contexto
-            .Noticias.Where(n => n.Categoría == "Política")
+            .Noticias.Where(n => n.Categoría == "Fútbol")
             .OrderByDescending(n => n.FechaPublicación)
             .ToListAsync();
     }
@@ -29,7 +29,7 @@ public class NoticiaService : INoticiaService
     public async Task<List<Noticia>> GetNoticiasCulturaAsync()
     {
         return await _contexto
-            .Noticias.Where(n => n.Categoría == "Política")
+            .Noticias.Where(n => n.Categoría == "Fútbol")
             .OrderByDescending(n => n.FechaPublicación)
             .ToListAsync();
     }
