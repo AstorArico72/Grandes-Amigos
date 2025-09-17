@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Restablecer contraseña</title>
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<style>
+			body {
+				font-family: Arial, sans-serif;
+				max-width: 600px;
+				margin: 40px auto;
+			}
+			label {
+				display: block;
+				margin-top: 12px;
+			}
+			input {
+				width: 100%;
+				padding: 8px;
+				margin-top: 6px;
+			}
+			button {
+				margin-top: 14px;
+				padding: 10px 16px;
+			}
+			.error {
+				color: crimson;
+			}
+			.success {
+				color: green;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Restablecer contraseña</h1>
+		<p>Ingresa la nueva contraseña.</p>
+
+		<div id="messages"></div>
+
+		<form id="resetForm">
+			<input type="hidden" id="token" />
+			<label
+				>Nueva contraseña
+				<input type="password" id="password" required minlength="8" />
+			</label>
+			<label
+				>Confirmar contraseña
+				<input type="password" id="confirmPassword" required minlength="8" />
+			</label>
+			<button type="submit">Cambiar contraseña</button>
+		</form>
+
+		<script>
+			(function () {
+				function getQueryParam(name) {
+					const params = new URLSearchParams(window.location.search);
+					return params.get(name);
+				}
+
+				const token =
+					getQueryParam('TokenRecuperacion') ||
+					getQueryParam('TokenRecuperación') ||
+					getQueryParam('token');
+				if (!token) {
+					document.getElementById('messages').innerHTML =
+						'<p class="error">Token no encontrado en la URL.</p>';
+					document.getElementById('resetForm').style.display = 'none';
+					return;
+				}
+				document.getElementById('token').value = token;
+
+				document
+					.getElementById('resetForm')
+					.addEventListener('submit', async function (e) {
+						e.preventDefault();
+						const password = document.getElementById('password').value;
+						const confirm = document.getElementById('confirmPassword').value;
+						const messages = document.getElementById('messages');
+						messages.innerHTML = '';
+
+						if (password.length < 8) {
+							messages.innerHTML =
+								'<p class="error">La contraseña debe tener al menos 8 caracteres.</p>';
+							return;
+						}
+						if (password !== confirm) {
+							messages.innerHTML =
+								'<p class="error">Las contraseñas no coinciden.</p>';
+							return;
+						}
+
+						const payload = {
+							TokenRecuperacion: token,
+							Password: password,
+							ConfirmPassword: confirm,
+						};
+
+						try {
+							const res = await fetch('/Api/Admin/CambiarClave', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify(payload),
+							});
+							const text = await res.text();
+							if (res.ok) {
+								messages.innerHTML =
+									'<p class="success">Contraseña cambiada correctamente. Ya podés iniciar sesión.</p>';
+								document.getElementById('resetForm').reset();
+							} else {
+								// intenta parsear JSON si devuelve json
+								let msg = text;
+								try {
+									msg = JSON.parse(text);
+								} catch {}
+								messages.innerHTML = `<p class="error">Error: ${
+									typeof msg === 'string'
+										? msg
+										: msg?.title || JSON.stringify(msg)
+								}</p>`;
+							}
+						} catch (err) {
+							messages.innerHTML =
+								'<p class="error">Error de comunicación. Intenta más tarde.</p>';
+							console.error(err);
+						}
+					});
+			})();
+		</script>
+	</body>
+</html>

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // URL de desarrollo
-builder.WebHost.UseUrls("http://127.0.0.1:5020");
+//builder.WebHost.UseUrls("http://127.0.0.1:5020");
 
 // MVC + API
 builder.Services.AddControllersWithViews();
@@ -15,6 +15,9 @@ builder.Services.AddApiVersioning(config =>
 {
     config.DefaultApiVersion = new ApiVersion(0, 1);
 });
+
+// Inyección de dependencia del servicio de correo
+builder.Services.AddScoped<Grandes_Amigos.Services.EmailService>();
 
 // Swagger
 builder.Services.AddSwaggerGen(options =>

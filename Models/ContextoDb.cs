@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 public class ContextoDb : DbContext
 {
-    private readonly string ConnectionString;
-
     public DbSet<Evento> Eventos { get; set; }
     public DbSet<Inscripción> Inscripciones { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
