@@ -46,21 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		RepetirClave: form.querySelector("[name='RepetirClave']"),
 	};
 
-	// Validar al salir del campo
-	Object.entries(inputs).forEach(([campo, input]) => {
-		input.addEventListener('blur', () => {
-			const mensaje = validarCampo(campo, input.value.trim(), inputs);
-			if (mensaje) {
-				Swal.fire({
-					icon: 'warning',
-					title: `Campo ${campo}`,
-					text: mensaje,
-				}).then(() => input.focus());
-			}
-		});
-	});
-
-	// Validación al enviar
+	// Descartada la validación al salir del campo
+	// Ahora la validación sólo pasa al enviar
 	form.addEventListener('submit', function (e) {
 		e.preventDefault();
 
