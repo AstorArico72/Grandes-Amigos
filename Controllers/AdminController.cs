@@ -28,6 +28,13 @@ namespace Grandes_Amigos.Controllers
             return View("~/Views/Admin/Login.cshtml");
         }
 
+        // GET /Admin/NuevoEvento
+        [HttpGet("NuevoEvento")]
+        public IActionResult Nuevo()
+        {
+            return View("~/Views/Admin/NuevoEvento.cshtml");
+        }
+
         // /Admin → redirige al Dashboard
         [HttpGet("")]
         public IActionResult Index() => RedirectToAction(nameof(Dashboard));

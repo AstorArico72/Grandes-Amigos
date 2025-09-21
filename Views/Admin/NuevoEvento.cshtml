@@ -1,0 +1,23 @@
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Nuevo Evento";
+}
+
+<!-- Pendiente: Dar formateo visual a éste formulario -->
+<form method="POST" action="/Api/Eventos/Nuevo">
+    <label for="CampoTitulo"> Título del evento: </label>
+    <input type="text" name="Título" max="255" maxlength="100" id="CampoTitulo" required/> <br>
+    <label for="CampoDescripcion"> Descripción del evento </label>
+    <!-- Pendiente: Formatear lo que se entra en el campo "Descripción" -->
+    <textarea name="Descripción" rows="10" cols="200" id="CampoDescripcion">
+    </textarea>
+    <br>
+    <label for="CampoFecha"> Fecha y hora del evento: </label>
+    <input type="datetime-local" id="CampoFecha" name="Fecha" min="@DateTime.Now.AddDays(1)"/> <br>
+    <input type="hidden" name="Ministerio" value="Llenar con ID del ministerio del admin conectado."/>
+    <!-- Pendiente: Establecer los límites para la foto -->
+    <label for="CampoFoto"> Foto: </label>
+    <input type="file" name="Foto" id="CampoFoto"/>
+    <br>
+    <button type="submit"> Guardar </button>
+</form>
