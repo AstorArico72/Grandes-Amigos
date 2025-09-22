@@ -35,8 +35,11 @@
 			}
 
 			const data = await res.json(); // { token, admin: { ... } }
+			console.log (data);
 			localStorage.setItem('adminToken', data.token);
-			localStorage.setItem('adminData', data.admin);
+			let admin = JSON.stringify (data.admin)
+			console.log ("Admin:" + admin);
+			localStorage.setItem('adminData', admin);
 
 			// Redirigir al Dashboard MVC
 			window.location.href = '/Admin/Dashboard';

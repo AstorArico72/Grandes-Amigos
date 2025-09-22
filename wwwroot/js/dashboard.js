@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
 	// Actualizar KPI de sesión
 	const admin = getAdminData();
 	if (kpiSesion) {
-		kpiSesion.textContent = admin?.admin?.NombreUsuario ?? '—';
+		kpiSesion.textContent = admin?.nombreUsuario ?? '—';
 	}
 
 	// Cargar KPI de Usuarios
