@@ -1,16 +1,12 @@
-using System.Net;
-using System.Net.Mime;
 using System.ServiceModel.Syndication;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
 using Swashbuckle.AspNetCore.Annotations;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 [ApiController]
 [ApiVersionNeutral]

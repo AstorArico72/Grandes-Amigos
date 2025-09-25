@@ -1,4 +1,3 @@
-using System.Numerics;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -77,14 +76,14 @@ public class EventosController : Controller
     )]
     [SwaggerResponse(200, "El evento existe en la base de datos.")]
     [SwaggerResponse(404, "El evento no existe en la base de datos.")]
-    public async Task<IActionResult> VerEvento([FromRoute] int id)
+    public IActionResult VerEvento([FromRoute] int id)
     {
-        var evento = await Contexto.Eventos.FindAsync(id);
+        var evento = Contexto.Eventos.Find(id);
         if (evento == null)
             return NotFound();
 
         // Buscar el ministerio relacionado
-        var ministerio = await Contexto.Ministerios.FindAsync(evento.ID_Ministerio);
+        var ministerio = Contexto.Ministerios.Find(evento.ID_Ministerio);
 
         // Devolver el evento + nombre del ministerio
         return Ok(
@@ -114,11 +113,11 @@ public class EventosController : Controller
     )]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> NuevoEvento([FromForm] Evento NuevoEvento)
+    public IActionResult NuevoEvento([FromForm] Evento NuevoEvento)
     {
         //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
 
-        Ministerio? ministerio = await Contexto.Ministerios.FindAsync(NuevoEvento.ID_Ministerio);
+        Ministerio? ministerio = Contexto.Ministerios.Find(NuevoEvento.ID_Ministerio);
 
         //Ésto asegura que el campo "ministerio" no apunte a un ministerio que no existe.
         if (ministerio == null)
@@ -144,7 +143,7 @@ public class EventosController : Controller
             if (ModelState.IsValid)
             {
                 Contexto.Eventos.Add(NuevoEvento);
-                await Contexto.SaveChangesAsync();
+                Contexto.SaveChanges();
                 return Created();
             }
             else
@@ -180,7 +179,7 @@ public class EventosController : Controller
     )]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> EditarEvento([FromForm] Evento EventoEditado)
+    public IActionResult EditarEvento([FromForm] Evento EventoEditado)
     {
         //Ésta función es para editar el evento como un todo.
         //Ésta función debería ser llamada desde un formulario parecido o idéntico al de crear eventos.
@@ -205,7 +204,7 @@ public class EventosController : Controller
                     EventoSeleccionado.Fecha = EventoEditado.Fecha;
                     EventoSeleccionado.Descripción = EventoEditado.Descripción;
                     EventoSeleccionado.Foto = EventoEditado.Foto;
-                    await Contexto.SaveChangesAsync();
+                    Contexto.SaveChanges();
                     Contexto.Entry(EventoSeleccionado).State = EntityState.Modified;
                     return Ok();
                 }
@@ -276,10 +275,10 @@ public class EventosController : Controller
     [SwaggerResponse(400, "El usuario no está inscrito a ningún evento.")]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> MisEventos()
+    public IActionResult MisEventos()
     {
         string IdUsuario = User.Claims.First(claim => claim.Type == "NumDocumento").Value;
-        Usuario? UsuarioEncontrado = await Contexto.Usuarios.FindAsync(Int32.Parse(IdUsuario));
+        Usuario? UsuarioEncontrado = Contexto.Usuarios.Find(Int32.Parse(IdUsuario));
         
         if (UsuarioEncontrado == null) //Validación para casos borde.
         {

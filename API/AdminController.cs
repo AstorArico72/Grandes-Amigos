@@ -15,15 +15,12 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using Grandes_Amigos.Models;
-using Grandes_Amigos.Models.ViewModels;
 using Grandes_Amigos.Services;
-using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MimeKit;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Grandes_Amigos.Api

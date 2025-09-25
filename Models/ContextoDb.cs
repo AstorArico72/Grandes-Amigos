@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using Grandes_Amigos.Models;
 using Microsoft.EntityFrameworkCore;
 

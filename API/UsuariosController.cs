@@ -1,13 +1,7 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using MimeKit;
-using MailKit.Net.Smtp;
 using System.Security.Cryptography;
 using MySqlConnector;
 using Swashbuckle.AspNetCore.Annotations;
@@ -92,7 +86,7 @@ public class UsuariosController : Controller
     )]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public async Task<IActionResult> NuevoUsuario([FromForm] Usuario NuevoUsuario)
+    public IActionResult NuevoUsuario([FromForm] Usuario NuevoUsuario)
     {
         try
         {
@@ -108,7 +102,7 @@ public class UsuariosController : Controller
                     )
                 );
                 Contexto.Usuarios.Add(NuevoUsuario);
-                await Contexto.SaveChangesAsync();
+                Contexto.SaveChanges();
                 return Created(); //Pendiente: Crear una vista que informe que la creación de la cuenta fué exitosa.
             }
             else
@@ -175,7 +169,7 @@ public class UsuariosController : Controller
     {
         try
         {
-            Usuario? UsuarioSeleccionado = await Contexto.Usuarios.FirstOrDefaultAsync(item =>
+            Usuario? UsuarioSeleccionado = Contexto.Usuarios.FirstOrDefault(item =>
                 item.Correo == correo
             );
             if (UsuarioSeleccionado == null)

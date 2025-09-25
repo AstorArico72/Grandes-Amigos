@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using MySqlConnector;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Grandes_Amigos.Api;
 
