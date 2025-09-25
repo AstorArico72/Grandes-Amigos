@@ -42,7 +42,6 @@ namespace Grandes_Amigos.Controllers
         public IActionResult Index() => RedirectToAction(nameof(Dashboard));
 
         // GET /Admin/Dashboard
-        //[Authorize (Policy = "Ministerio")]
         [HttpGet("Dashboard")]
         public async Task<IActionResult> Dashboard()
         {
