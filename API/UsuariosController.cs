@@ -90,6 +90,10 @@ public class UsuariosController : Controller
     {
         try
         {
+            if (Contexto.Admins.Any(a => a.Email == NuevoUsuario.Correo) || Contexto.Usuarios.Any(u => u.Correo == NuevoUsuario.Correo))
+            {
+                return BadRequest("Ése correo ya está en uso.");
+            }
             if (ModelState.IsValid)
             {
                 NuevoUsuario.Clave = Convert.ToBase64String(

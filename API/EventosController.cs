@@ -100,7 +100,7 @@ public class EventosController : Controller
         );
     }
 
-    [Authorize(Policy = "Ministerio")]
+    [AllowAnonymous] //Autorización temporalmente quitada.
     [HttpPost("Nuevo")]
     [SwaggerOperation(
         Summary = "Crea un nuevo evento.",

@@ -70,6 +70,11 @@ namespace Grandes_Amigos.Api
             if (string.IsNullOrEmpty(salt))
                 return StatusCode(500, "Falta configurar 'Salt' en appsettings.");
 
+            if (_ctx.Admins.Any(a => a.Email == nuevo.Email) || _ctx.Usuarios.Any(u => u.Correo == nuevo.Email))
+            {
+                return BadRequest("Ése correo ya está en uso.");
+            }
+
             // Hash PBKDF2 (HMACSHA256, 4096 iteraciones, 256 bits)
             nuevo.Clave = Convert.ToBase64String(
                 KeyDerivation.Pbkdf2(

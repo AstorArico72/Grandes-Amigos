@@ -2,12 +2,13 @@ $(document).ready (function () {
     const token = localStorage.getItem ("adminToken");
     let admin = localStorage.getItem ("adminData");
     const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-    $("#CampoMinisterio").attr ("value", admin.idMinisterio);
+    $("#CampoMinisterio")[0].attr ("value", admin.idMinisterio);
 
-    let form = $("#formulario");
+    let form = $("#formulario")[0];
     form.on ("submit", async (e) => {
         e.preventDefault ();
         const formData = new FormData(form);
+        formData.append ("Foto", $("#CampoFoto")[0].prop ("files")[0]);
         try {
 			const res = await fetch('/Api/Eventos/Nuevo', {
 				method: 'POST',

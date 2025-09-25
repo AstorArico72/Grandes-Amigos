@@ -142,7 +142,7 @@ public class InscripcionController : Controller
             }
             else if (Inscripciones.Count() == 0)
             {
-                return NoContent();
+                return Ok("No hay inscritos a ése evento.");
             }
             else
             {
