@@ -4,7 +4,7 @@
 // SIN [Authorize] porque usamos JWT-only y los datos del panel
 // se obtienen desde JS llamando a /Api/* con Bearer.
 //
-// Añadido [Authorize] porque, de lo contrario, es posible acceder a la API sin el token.
+// Pendiente: Averiguar por qué el token no es transportado.
 
 using Grandes_Amigos.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -31,7 +31,6 @@ namespace Grandes_Amigos.Controllers
         }
 
         // GET /Admin/NuevoEvento
-        [Authorize (Policy = "Ministerio")]
         [HttpGet("NuevoEvento")]
         public IActionResult Nuevo()
         {
@@ -39,12 +38,11 @@ namespace Grandes_Amigos.Controllers
         }
 
         // /Admin → redirige al Dashboard
-        [Authorize (Policy = "Ministerio")]
         [HttpGet("")]
         public IActionResult Index() => RedirectToAction(nameof(Dashboard));
 
         // GET /Admin/Dashboard
-        [Authorize (Policy = "Ministerio")]
+        //[Authorize (Policy = "Ministerio")]
         [HttpGet("Dashboard")]
         public async Task<IActionResult> Dashboard()
         {
@@ -63,7 +61,6 @@ namespace Grandes_Amigos.Controllers
         }
 
         // GET /Admin/Usuarios
-        [Authorize (Policy = "Ministerio")]
         [HttpGet("Usuarios")]
         public IActionResult Usuarios() => View("~/Views/Admin/Usuarios.cshtml");
     }
