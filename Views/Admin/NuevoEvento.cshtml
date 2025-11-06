@@ -1,26 +1,53 @@
 @{
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
     ViewData["Title"] = "Nuevo Evento";
+    var minDateValue = DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm");
 }
 
-<!-- Pendiente: Dar formateo visual a éste formulario -->
-<form action="/Api/Eventos/Nuevo" id="formulario" method="POST" enctype="multipart/form-data">
-    <label for="CampoTitulo"> Título del evento: </label>
-    <input type="text" name="Título" max="255" maxlength="100" id="CampoTitulo" required/> <br>
-    <label for="CampoDescripcion"> Descripción del evento </label>
-    <!-- Pendiente: Formatear lo que se entra en el campo "Descripción" -->
-    <textarea name="Descripción" rows="10" cols="200" id="CampoDescripcion">
-    </textarea>
-    <br>
-    <label for="CampoFecha"> Fecha y hora del evento: </label>
-    <input type="datetime-local" id="CampoFecha" name="Fecha" min="@DateTime.Now.AddDays(1)"/> <br>
-    <input type="hidden" id="CampoMinisterio" name="Ministerio" value=""/>
-    <!-- Pendiente: Establecer los límites para la foto -->
-    <label for="CampoFoto"> Foto: </label>
-    <input type="file" name="Foto" id="CampoFoto"/>
-    <br>
-    <button type="submit"> Guardar </button>
-</form>
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Crear nuevo evento</h5>
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-sm btn-outline-secondary">Volver</a>
+        </div>
+
+        <form action="/Api/Eventos/Nuevo" id="formulario" method="POST" enctype="multipart/form-data" class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="CampoTitulo" class="form-label">Título</label>
+                    <input type="text" name="Título" id="CampoTitulo" maxlength="100" class="form-control" required />
+                </div>
+
+                <div class="col-12">
+                    <label for="CampoDescripcion" class="form-label">Descripción</label>
+                    <textarea name="Descripción" id="CampoDescripcion" rows="6" class="form-control" required></textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="CampoFecha" class="form-label">Fecha y hora</label>
+                    <input type="datetime-local" id="CampoFecha" name="Fecha" class="form-control" min="@minDateValue" required />
+                    <div class="form-text">La fecha debe ser al menos 1 día en el futuro.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Ministerio</label>
+                    <input type="number" name="ID_Ministerio" class="form-control" placeholder="ID del ministerio (numérico)" />
+                </div>
+
+                <div class="col-12 col-md-8">
+                    <label for="CampoFoto" class="form-label">Foto (opcional)</label>
+                    <input type="file" name="Foto" id="CampoFoto" accept="image/*" class="form-control" />
+                    <div class="form-text">JPG/PNG. Tamaño recomendado: <em>optimizar antes de subir</em>.</div>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar evento</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 @section Scripts {
     <!-- Admin guard + helpers -->
