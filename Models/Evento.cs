@@ -22,10 +22,11 @@ public class Evento
     [ForeignKey("Ministerio")]
     public int ID_Ministerio { get; set; }
 
-    // 🚨 Agregá esta propiedad para navegar al Ministerio
-    public Ministerio Ministerio { get; set; }
+    // navegación opcional para evitar validación automática
+    public Ministerio? Ministerio { get; set; }
 
-    [Required(ErrorMessage = "Es necesario incluir una foto.", AllowEmptyStrings = false)]
+    // La foto la guardamos desde el controller al procesar IFormFile.
+    // Si la quieres obligatoria, valida después de guardar el archivo.
     public string? Foto { get; set; }
 
     public Evento() { }

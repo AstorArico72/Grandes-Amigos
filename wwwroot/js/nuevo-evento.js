@@ -1,32 +1,43 @@
-$(document).ready (function () {
-    const token = localStorage.getItem ("adminToken");
-    let admin = localStorage.getItem ("adminData");
-    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-    $("#CampoMinisterio")[0].attr ("value", admin.idMinisterio);
+$(document).ready(function () {
+	const token = localStorage.getItem('adminToken');
+	let admin = {};
+	try {
+		admin = JSON.parse(localStorage.getItem('adminData') || '{}');
+	} catch (e) {}
 
-    let form = $("#formulario")[0];
-    form.on ("submit", async (e) => {
-        e.preventDefault ();
-        const formData = new FormData(form);
-        formData.append ("Foto", $("#CampoFoto")[0].prop ("files")[0]);
-        try {
+	if (admin && admin.idMinisterio) {
+		$('#CampoMinisterio').val(admin.idMinisterio);
+	}
+
+	$('#formulario').on('submit', async function (e) {
+		e.preventDefault();
+		const form = this;
+		const formData = new FormData(form);
+
+		const fileInput = $('#CampoFoto')[0];
+		if (fileInput && fileInput.files && fileInput.files.length > 0) {
+			formData.set('Foto', fileInput.files[0]);
+		}
+
+		const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+		try {
 			const res = await fetch('/Api/Eventos/Nuevo', {
 				method: 'POST',
 				body: formData,
-                headers: authHeaders
+				headers, // no Content-Type when FormData
 			});
-            if (!res.ok) {
+
+			if (!res.ok) {
 				const txt = await res.text();
-				throw new Error(txt || 'No se pudo crear el usuario.');
-			} else {
-			    Swal.fire('¡Éxito!', 'El evento fue creado.', 'success');
-            }
-        } catch (err) {
-				Swal.fire(
-				'Error',
-				err.message || 'Fallo al crear el evento.',
-				'error'
-			);
+				throw new Error(txt || 'No se pudo crear el evento.');
+			}
+
+			Swal.fire('¡Éxito!', 'El evento fue creado.', 'success').then(() => {
+				window.location.href = '/Admin/Dashboard';
+			});
+		} catch (err) {
+			Swal.fire('Error', err.message || 'Fallo al crear el evento.', 'error');
 		}
-    });
+	});
 });

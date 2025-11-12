@@ -1,3 +1,4 @@
+using System.IO;
 using Grandes_Amigos.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,11 +20,17 @@ public class EventosController : Controller
     // Patrón: [host]/Api/Eventos
     private readonly ILogger<EventosController> _logger;
     private ContextoDb Contexto;
+    private readonly IWebHostEnvironment _env;
 
-    public EventosController(ILogger<EventosController> logger, ContextoDb contexto)
+    public EventosController(
+        ILogger<EventosController> logger,
+        ContextoDb contexto,
+        IWebHostEnvironment env
+    )
     {
         _logger = logger;
         Contexto = contexto;
+        _env = env;
     }
 
     [AllowAnonymous]
@@ -48,15 +55,20 @@ public class EventosController : Controller
     )]
     [SwaggerResponse(200, "Hay al menos una entrada.")]
     [SwaggerResponse(404, "El ministerio no existe; o existe, pero no hay eventos asociados.")]
-    public IActionResult PorMinisterio([FromRoute] string Ministerio) {
-        Ministerio? min = Contexto.Ministerios.FirstOrDefault(m => m.Nombre.ToLower() == Ministerio.ToLower()); //Ésto permite entrarlo tanto con o sin mayúsculas.
-        
+    public IActionResult PorMinisterio([FromRoute] string Ministerio)
+    {
+        Ministerio? min = Contexto.Ministerios.FirstOrDefault(m =>
+            m.Nombre.ToLower() == Ministerio.ToLower()
+        ); //Ésto permite entrarlo tanto con o sin mayúsculas.
+
         if (min == null)
         {
             return NotFound("El ministerio pedido no existe.");
         }
 
-        List<Evento?> Eventos = Contexto.Eventos.Where(e => e.ID_Ministerio == min.ID).ToList<Evento?>();
+        List<Evento?> Eventos = Contexto
+            .Eventos.Where(e => e.ID_Ministerio == min.ID)
+            .ToList<Evento?>();
 
         if (Eventos.IsNullOrEmpty())
         {
@@ -102,24 +114,10 @@ public class EventosController : Controller
 
     [AllowAnonymous] //Autorización temporalmente quitada.
     [HttpPost("Nuevo")]
-    [SwaggerOperation(
-        Summary = "Crea un nuevo evento.",
-        Description = "Crea una entrada en la tabla `Eventos`, tomando el cuerpo del pedido como parámetro. Ve a `/Models/Evento.cs` para saber qué entra aquí."
-    )]
-    [SwaggerResponse(201, "Se cargó el nuevo evento a la base de datos exitosamente.")]
-    [SwaggerResponse(
-        400,
-        "Algún campo tiene un valor inválido. Lee la respuesta para saber qué falta o está mal."
-    )]
-    [SwaggerResponse(401, "Se accedió sin autorización.")]
-    [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public IActionResult NuevoEvento([FromForm] Evento NuevoEvento)
+    public IActionResult NuevoEvento([FromForm] Evento NuevoEvento, IFormFile? Foto)
     {
-        //Ésto asume que los datos llegan de un formulario de tipo "x-www-form-urlencoded".
-
         Ministerio? ministerio = Contexto.Ministerios.Find(NuevoEvento.ID_Ministerio);
 
-        //Ésto asegura que el campo "ministerio" no apunte a un ministerio que no existe.
         if (ministerio == null)
         {
             ModelState.AddModelError(
@@ -128,10 +126,8 @@ public class EventosController : Controller
             );
         }
 
-        //Ésto asegura que los eventos sólo puedan crearse con fechas futuras.
         if (DateTime.Compare(NuevoEvento.Fecha, DateTime.Today.AddDays(1)) <= 0)
         {
-            //Pendiente: Consultar si los eventos tienen fecha de inicio y fecha de fin.
             ModelState.AddModelError(
                 nameof(NuevoEvento.Fecha),
                 "Los eventos deben crearse con al menos un día de anticipación."
@@ -140,24 +136,47 @@ public class EventosController : Controller
 
         try
         {
+            // Procesar archivo si llegó
+            if (Foto != null && Foto.Length > 0)
+            {
+                var uploads = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "eventos");
+                if (!Directory.Exists(uploads))
+                    Directory.CreateDirectory(uploads);
+
+                var ext = Path.GetExtension(Foto.FileName);
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploads, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    Foto.CopyTo(stream);
+                }
+
+                // Ruta pública para guardar en DB
+                NuevoEvento.Foto = $"/uploads/eventos/{fileName}";
+            }
+
+            // Evitar validación fallida porque el model binder no asigna el IFormFile al string Foto
+            // y porque la propiedad de navegación Ministerio ahora es nullable.
+            ModelState.Remove(nameof(NuevoEvento.Foto));
+            ModelState.Remove(nameof(NuevoEvento.Ministerio));
+
             if (ModelState.IsValid)
             {
                 Contexto.Eventos.Add(NuevoEvento);
                 Contexto.SaveChanges();
-                return Created();
+                return CreatedAtAction(
+                    nameof(VerEvento),
+                    new { id = NuevoEvento.ID },
+                    new { id = NuevoEvento.ID }
+                );
             }
             else
             {
-                // Pendiente: Reemplazar ésto por una página de error comprensiva en la implementación para los clientes.
-                List<string> ErroresModelo = new List<string>();
-                var errores = ModelState.Values.SelectMany(value => value.Errors);
-                foreach (var item in errores)
-                {
-                    ErroresModelo.Add(item.ErrorMessage);
-                }
-                return BadRequest(
-                    "Estado de modelo inválido:\n" + string.Join("\n", ErroresModelo)
-                );
+                var errores = ModelState
+                    .Values.SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+                return BadRequest("Estado de modelo inválido:\n" + string.Join("\n", errores));
             }
         }
         catch (MySqlException ex)
@@ -279,14 +298,16 @@ public class EventosController : Controller
     {
         string IdUsuario = User.Claims.First(claim => claim.Type == "NumDocumento").Value;
         Usuario? UsuarioEncontrado = Contexto.Usuarios.Find(Int32.Parse(IdUsuario));
-        
+
         if (UsuarioEncontrado == null) //Validación para casos borde.
         {
             return Unauthorized("Usuario inválido.");
         }
         else
         {
-            List<Inscripción> inscripciones = Contexto.Inscripciones.Where(item => item.ID_Inscrito == UsuarioEncontrado.NumDocumento).ToList();
+            List<Inscripción> inscripciones = Contexto
+                .Inscripciones.Where(item => item.ID_Inscrito == UsuarioEncontrado.NumDocumento)
+                .ToList();
             List<Evento> eventos = new List<Evento>();
             inscripciones.ForEach(item =>
             {
