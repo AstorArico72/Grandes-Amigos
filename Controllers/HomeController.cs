@@ -24,7 +24,7 @@ public class HomeController : Controller
             .Select(e => new EventoConMinisterioViewModel
             {
                 Evento = e,
-                NombreMinisterio = e.Ministerio.Nombre,
+                NombreMinisterio = e.Ministerio.Nombre
             })
             .ToListAsync();
 
@@ -35,7 +35,7 @@ public class HomeController : Controller
             .Select(e => new EventoConMinisterioViewModel
             {
                 Evento = e,
-                NombreMinisterio = e.Ministerio.Nombre,
+                NombreMinisterio = e.Ministerio.Nombre
             })
             .ToListAsync();
 
@@ -45,7 +45,7 @@ public class HomeController : Controller
             Cultura = await _noticiaService.GetNoticiasCulturaAsync(),
             Salud = await _noticiaService.GetNoticiasSaludAsync(),
             Eventos = eventosConMinisterios,
-            EventosDestacados = eventosDestacados,
+            EventosDestacados = eventosDestacados
         };
 
         return View("~/Views/Public/Index.cshtml", model);

@@ -112,7 +112,7 @@ public class EventosController : Controller
         );
     }
 
-    [AllowAnonymous] //Autorización temporalmente quitada.
+    [Authorize(Policy="Ministerio")]
     [HttpPost("Nuevo")]
     public IActionResult NuevoEvento([FromForm] Evento NuevoEvento, IFormFile? Foto)
     {
@@ -167,7 +167,6 @@ public class EventosController : Controller
                 Contexto.SaveChanges();
                 return CreatedAtAction(
                     nameof(VerEvento),
-                    new { id = NuevoEvento.ID },
                     new { id = NuevoEvento.ID }
                 );
             }
@@ -186,7 +185,7 @@ public class EventosController : Controller
     }
 
     [Authorize(Policy = "Ministerio")]
-    [HttpPut("Editar")]
+    [HttpPut("Editar/{id}")]
     [SwaggerOperation(
         Summary = "Edita un evento.",
         Description = "Tomando el cuerpo del pedido, edita una entrada de la tabla 'Eventos', donde el ID del evento coincida con el ID especificado en el cuerpo."
@@ -198,14 +197,15 @@ public class EventosController : Controller
     )]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public IActionResult EditarEvento([FromForm] Evento EventoEditado)
+    public IActionResult EditarEvento([FromRoute] int id, [FromForm] Evento EventoEditado)
     {
         //Ésta función es para editar el evento como un todo.
         //Ésta función debería ser llamada desde un formulario parecido o idéntico al de crear eventos.
         //Pendiente: Tal vez implementar una versión más ligera de ésta función para cambiar un sólo campo (por ejemplo, la fecha) que use HTTP PATCH en lugar de PUT
 
         //Ésto sirve para revisar si llegó un ID erróneo. Tal vez sea necesario quitarlo.
-        Evento? EventoSeleccionado = Contexto.Eventos.Find(EventoEditado.ID);
+        Evento? EventoSeleccionado = Contexto.Eventos.Find(id);
+        Ministerio? ministerio = Contexto.Ministerios.Find(EventoEditado.ID_Ministerio);
         if (EventoSeleccionado != null)
         {
             if (EventoEditado.Fecha <= DateTime.Today)
@@ -223,6 +223,8 @@ public class EventosController : Controller
                     EventoSeleccionado.Fecha = EventoEditado.Fecha;
                     EventoSeleccionado.Descripción = EventoEditado.Descripción;
                     EventoSeleccionado.Foto = EventoEditado.Foto;
+                    EventoSeleccionado.ID_Ministerio = EventoSeleccionado.ID_Ministerio;
+                    EventoSeleccionado.Ministerio = ministerio;
                     Contexto.SaveChanges();
                     Contexto.Entry(EventoSeleccionado).State = EntityState.Modified;
                     return Ok();
