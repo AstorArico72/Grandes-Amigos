@@ -1,4 +1,12 @@
+@using System
+@{
+    var adminNombre = User?.FindFirst("AdminNombre")?.Value ?? User?.Identity?.Name;
+    var adminMinisterio = User?.FindFirst("AdminMinisterio")?.Value ?? User?.FindFirst("IdMinisterio")?.Value;
+    var esSuperAdmin = adminMinisterio == "1";
+}
+
 <aside class="admin-sidebar">
+
     <div class="p-3 border-bottom border-opacity-10">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-grid-1x2 fs-5 text-secondary-200"></i>
@@ -18,5 +26,12 @@
         <a class="nav-link" asp-controller="Admin" asp-action="NuevoEvento">
             <i class="bi bi-calendar-event"></i> Eventos
         </a>
+
+        @if (esSuperAdmin)
+        {
+            <a class="nav-link" asp-controller="Admin" asp-action="Administradores">
+                <i class="bi bi-shield-lock"></i> Administradores
+            </a>
+        }
     </nav>
 </aside>

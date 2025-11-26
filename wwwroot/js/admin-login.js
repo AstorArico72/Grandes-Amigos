@@ -35,11 +35,26 @@
 			}
 
 			const data = await res.json(); // { token, admin: { ... } }
-			console.log (data);
 			localStorage.setItem('adminToken', data.token);
-			let admin = JSON.stringify (data.admin)
-			console.log ("Admin:" + admin);
-			localStorage.setItem('adminData', admin);
+			localStorage.setItem('adminData', JSON.stringify(data.admin));
+
+			// Crear cookie de autenticacion para vistas Razor
+			if (data.admin) {
+				const formData = new FormData();
+				formData.append('nombre', data.admin.NombreUsuario ?? data.admin.nombreUsuario ?? '');
+				formData.append('ministerio', (data.admin.IdMinisterio ?? data.admin.idMinisterio ?? '').toString());
+				formData.append('id', (data.admin.ID ?? data.admin.id ?? '').toString());
+
+				try {
+					await fetch('/Admin/EstablecerCookie', {
+						method: 'POST',
+						body: formData,
+						credentials: 'include',
+					});
+				} catch (cookieErr) {
+					console.error('No se pudo establecer la cookie de sesion.', cookieErr);
+				}
+			}
 
 			// Redirigir al Dashboard MVC
 			window.location.href = '/Admin/Dashboard';

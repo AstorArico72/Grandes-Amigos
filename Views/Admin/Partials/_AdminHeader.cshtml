@@ -1,3 +1,7 @@
+﻿@{
+    var adminNombre = User?.FindFirst("AdminNombre")?.Value ?? User?.Identity?.Name ?? "-";
+}
+
 <header class="navbar-admin border-bottom px-3">
     <div class="container-fluid d-flex justify-content-between align-items-center py-2">
         <div class="d-flex align-items-center gap-2">
@@ -6,8 +10,8 @@
         </div>
 
         <div class="d-flex align-items-center gap-3">
-            <span class="small text-secondary-200">Sesión: <strong id="kpiSesion">—</strong></span>
-            <a href="#" id="btnLogoutJwt" class="btn btn-outline-danger btn-sm">
+            <span class="small text-secondary-200">Sesion: <strong id="kpiSesion">@adminNombre</strong></span>
+            <a asp-controller="Admin" asp-action="Logout" id="btnLogoutJwt" class="btn btn-outline-danger btn-sm">
                 <i class="bi bi-box-arrow-right"></i> Salir
             </a>
         </div>

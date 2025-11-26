@@ -1,7 +1,7 @@
 // Controllers/AdminApiController.cs
 //
 // Controlador de API para endpoints de administración.
-// ⚠️ NO devuelve Views ni hace RedirectToAction: responde JSON.
+//  NO devuelve Views ni hace RedirectToAction: responde JSON.
 // Rutas base: /Api/Admin/*
 // - POST /Api/Admin/Nuevo   → alta de administrador (hash de clave)
 // - POST /Api/Admin/Login   → valida credenciales y devuelve { token, admin }
@@ -70,7 +70,10 @@ namespace Grandes_Amigos.Api
             if (string.IsNullOrEmpty(salt))
                 return StatusCode(500, "Falta configurar 'Salt' en appsettings.");
 
-            if (_ctx.Admins.Any(a => a.Email == nuevo.Email) || _ctx.Usuarios.Any(u => u.Correo == nuevo.Email))
+            if (
+                _ctx.Admins.Any(a => a.Email == nuevo.Email)
+                || _ctx.Usuarios.Any(u => u.Correo == nuevo.Email)
+            )
             {
                 return BadRequest("Ése correo ya está en uso.");
             }
@@ -138,6 +141,9 @@ namespace Grandes_Amigos.Api
                 new Claim(ClaimTypes.Name, admin.NombreUsuario),
                 new Claim(ClaimTypes.Role, "Ministerio"),
                 new Claim("IdMinisterio", admin.IdMinisterio.ToString()),
+                new Claim("AdminID", admin.ID.ToString()),
+                new Claim("AdminNombre", admin.NombreUsuario),
+                new Claim("AdminMinisterio", admin.IdMinisterio.ToString()),
             };
 
             // Clave JWT
@@ -163,7 +169,16 @@ namespace Grandes_Amigos.Api
 
             // ✅ API responde JSON (para fetch de admin-login.js)
             return Ok(
-                new { token = tokenString, admin = new { admin.NombreUsuario, admin.IdMinisterio } }
+                new
+                {
+                    token = tokenString,
+                    admin = new
+                    {
+                        admin.ID,
+                        admin.NombreUsuario,
+                        admin.IdMinisterio,
+                    },
+                }
             );
         }
 

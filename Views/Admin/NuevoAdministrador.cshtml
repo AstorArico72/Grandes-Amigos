@@ -1,0 +1,78 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using System.Linq
+@model Grandes_Amigos.Models.ViewModels.AdminFormViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    var esEdicion = Model?.EsEdicion ?? false;
+    var titulo = esEdicion ? "Editar Administrador" : "Nuevo Administrador";
+    ViewData["Title"] = titulo;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">@titulo</h2>
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Administradores" asp-controller="Admin">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="@(esEdicion ? "EditarAdministrador" : "NuevoAdministrador")" asp-route-id="@Model?.ID" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de usuario</label>
+                        <input asp-for="NombreUsuario" class="form-control" required />
+                        <span asp-validation-for="NombreUsuario" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input asp-for="Email" type="email" class="form-control" required />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Contrasena @(esEdicion ? "(opcional)" : string.Empty)</label>
+                        @if (esEdicion)
+                        {
+                            <input asp-for="Clave" type="password" class="form-control" autocomplete="new-password" />
+                        }
+                        else
+                        {
+                            <input asp-for="Clave" type="password" class="form-control" autocomplete="new-password" required />
+                        }
+                        <span asp-validation-for="Clave" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Confirmar contrasena @(esEdicion ? "(opcional)" : string.Empty)</label>
+                        @if (esEdicion)
+                        {
+                            <input asp-for="ConfirmarClave" type="password" class="form-control" autocomplete="new-password" />
+                        }
+                        else
+                        {
+                            <input asp-for="ConfirmarClave" type="password" class="form-control" autocomplete="new-password" required />
+                        }
+                        <span asp-validation-for="ConfirmarClave" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Ministerio</label>
+                        <select asp-for="IdMinisterio" class="form-select" asp-items="@(new SelectList(Model?.Ministerios ?? Enumerable.Empty<Grandes_Amigos.Models.Ministerio>(), "ID", "Nombre", Model?.IdMinisterio))"></select>
+                        <span class="form-text">Por defecto ministerio 1.</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a class="btn btn-outline-secondary" asp-action="Administradores" asp-controller="Admin">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">@(esEdicion ? "Guardar cambios" : "Crear administrador")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

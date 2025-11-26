@@ -1,5 +1,7 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,7 +18,7 @@ builder.Services.AddApiVersioning(config =>
     config.DefaultApiVersion = new ApiVersion(0, 1);
 });
 
-// Inyección de dependencia del servicio de correo
+// Inyeccion de dependencia del servicio de correo
 builder.Services.AddScoped<Grandes_Amigos.Services.EmailService>();
 
 // Swagger
@@ -45,16 +47,25 @@ builder.Services.AddDbContext<ContextoDb>(options =>
 );
 
 /* =========================
-   AUTENTICACIÓN: SOLO JWT
+   AUTENTICACION: JWT (API) + Cookie (MVC)
    ========================= */
 builder
-    .Services.AddAuthentication(options =>
-    {
-        // Todo se autentica con JWT (no cookies)
-        options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
+    .Services.AddAuthentication("AdminCookie")
+    .AddCookie(
+        "AdminCookie",
+        options =>
+        {
+            options.Cookie.Name = "AdminCookie";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Lax;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.None; // localhost/dev
+            options.ExpireTimeSpan = TimeSpan.FromHours(12);
+            options.SlidingExpiration = true;
+            options.LoginPath = "/Admin/Login";
+            options.AccessDeniedPath = "/Admin/Login";
+            options.LogoutPath = "/Admin/Logout";
+        }
+    )
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters =
@@ -77,10 +88,10 @@ builder
     });
 
 /* =========================
-   AUTORIZACIÓN (POLÍTICAS)
+   AUTORIZACION (POLITICAS)
    =========================
-   - "Ministerio": SOLO JWT (panel consumirá APIs con Bearer desde JS)
-   - "Usuario":    SOLO JWT (público autenticado)
+   - "Ministerio": SOLO JWT (panel consumira APIs con Bearer desde JS)
+   - "Usuario":    SOLO JWT (publico autenticado)
 */
 builder.Services.AddAuthorization(options =>
 {
@@ -90,7 +101,6 @@ builder.Services.AddAuthorization(options =>
         {
             policy.RequireRole("Ministerio");
             policy.RequireClaim(ClaimTypes.Role, "Ministerio");
-            policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
         }
     );
 
@@ -100,7 +110,6 @@ builder.Services.AddAuthorization(options =>
         {
             policy.RequireRole("Usuario");
             policy.RequireClaim(ClaimTypes.Role, "Usuario");
-            policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
         }
     );
 });
@@ -110,7 +119,7 @@ builder.Services.AddScoped<INoticiaService, NoticiaService>();
 
 var app = builder.Build();
 
-// Swagger sólo en dev
+// Swagger solo en dev
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(options =>
@@ -132,7 +141,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-/* IMPORTANTE: Autenticación antes de Autorización */
+/* IMPORTANTE: Autenticacion antes de Autorizacion */
 app.UseAuthentication();
 app.UseAuthorization();
 
