@@ -51,12 +51,57 @@
 		}
 	});
 
-	// Por ahora, el botón "recuperar" no hace nada (sin acción)
+	// Flujo de recuperación de contraseña
 	const recuperar = document.getElementById('btn-recuperar');
 	if (recuperar) {
-		recuperar.addEventListener('click', () => {
-			// Placeholder: acá luego abrís un modal o navegas a /Admin/Recuperar
-			// (no implementado por pedido)
+		recuperar.addEventListener('click', async () => {
+			if (typeof Swal === 'undefined') {
+				console.error('SweetAlert no está disponible.');
+				return;
+			}
+
+			const { isConfirmed, value: correo } = await Swal.fire({
+				title: 'Recuperar acceso',
+				text: 'Ingresa el correo asociado a tu usuario de administrador.',
+				input: 'email',
+				inputPlaceholder: 'correo@ejemplo.com',
+				confirmButtonText: 'Enviar correo',
+				showCancelButton: true,
+				focusConfirm: false,
+				preConfirm: async (email) => {
+					if (!email) {
+						Swal.showValidationMessage('Debes ingresar un correo.');
+						return false;
+					}
+					try {
+						const formData = new FormData();
+						formData.append('correo', email.trim());
+
+						const res = await fetch('/Api/Admin/ClaveOlvidada', {
+							method: 'POST',
+							body: formData,
+						});
+
+						if (!res.ok) {
+							const msg = await res.text();
+							throw new Error(msg || 'No se pudo enviar el correo.');
+						}
+
+						return email;
+					} catch (err) {
+						Swal.showValidationMessage(err.message || 'Error al enviar el correo.');
+						return false;
+					}
+				},
+			});
+
+			if (isConfirmed && correo) {
+				await Swal.fire({
+					icon: 'success',
+					title: 'Correo enviado',
+					text: `Si el correo ${correo} está registrado, recibirás un enlace para restablecer tu contraseña.`,
+				});
+			}
 		});
 	}
 })();
