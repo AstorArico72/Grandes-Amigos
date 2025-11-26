@@ -46,7 +46,7 @@
                                         <a class="btn btn-outline-primary btn-sm" asp-action="EditarAdministrador" asp-route-id="@admin.ID">
                                             <i class="bi bi-pencil"></i> Editar
                                         </a>
-                                        <form asp-action="EliminarAdministrador" asp-route-id="@admin.ID" method="post" onsubmit="return confirm('Eliminar administrador?');">
+                                        <form asp-action="EliminarAdministrador" asp-route-id="@admin.ID" method="post" onsubmit="event.preventDefault(); Swal.fire({ title: '¿Eliminar?', text: 'Esta acción no se puede deshacer', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar' }).then((r) => { if (r.isConfirmed) { this.submit(); } }); return false;">
                                             @Html.AntiForgeryToken()
                                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                                 <i class="bi bi-trash"></i> Eliminar

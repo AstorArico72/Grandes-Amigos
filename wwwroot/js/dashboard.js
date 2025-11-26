@@ -109,9 +109,17 @@ document.addEventListener('DOMContentLoaded', function () {
 			try {
 				const res = await fetch('/Api/Noticias/Cargar', { method: 'POST' }); // Usar POST para acciones
 				if (!res.ok) throw new Error('No se pudo cargar el feed RSS');
-				alert('Noticias actualizadas correctamente.');
+				Swal.fire({
+					icon: 'success',
+					title: 'Operación realizada',
+					text: 'El cambio se guardó correctamente',
+				});
 			} catch (err) {
-				alert(err.message);
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'No se pudo completar la acción',
+				});
 			} finally {
 				btn.disabled = false;
 				btn.innerHTML = oldHtml;

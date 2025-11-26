@@ -19,7 +19,11 @@ namespace Grandes_Amigos.Api
         private readonly IConfiguration Config;
         private ContextoDb Contexto;
 
-        public AuthController(ILogger<UsuariosController> logger, ContextoDb contexto, IConfiguration ajustes)
+        public AuthController(
+            ILogger<UsuariosController> logger,
+            ContextoDb contexto,
+            IConfiguration ajustes
+        )
         {
             _logger = logger;
             Contexto = contexto;
@@ -52,7 +56,9 @@ namespace Grandes_Amigos.Api
             }
             catch (FormatException)
             {
-                AdminEncontrado = await Contexto.Admins.FirstOrDefaultAsync(admin => admin.NombreUsuario == login.Identificador);
+                AdminEncontrado = await Contexto.Admins.FirstOrDefaultAsync(admin =>
+                    admin.NombreUsuario == login.Identificador
+                );
             }
 
             var saltString = Config["Salt"];
@@ -71,7 +77,10 @@ namespace Grandes_Amigos.Api
                 )
             );
 
-            if ((UsuarioEncontrado != null && claveHash != UsuarioEncontrado.Clave) || (AdminEncontrado != null && claveHash != AdminEncontrado.Clave))
+            if (
+                (UsuarioEncontrado != null && claveHash != UsuarioEncontrado.Clave)
+                || (AdminEncontrado != null && claveHash != AdminEncontrado.Clave)
+            )
             {
                 return BadRequest("Clave incorrecta.");
             }
@@ -118,14 +127,14 @@ namespace Grandes_Amigos.Api
                 var RespuestaUsuario = new
                 {
                     token = tokenString,
-                usuario = new
-                {
-                    NumDocumento = UsuarioEncontrado.NumDocumento,
-                    TipoDocumento = UsuarioEncontrado.TipoDocumento,
-                    Correo = UsuarioEncontrado.Correo,
-                    Nombre = UsuarioEncontrado.Nombre,
-                }
-            };
+                    usuario = new
+                    {
+                        NumDocumento = UsuarioEncontrado.NumDocumento,
+                        TipoDocumento = UsuarioEncontrado.TipoDocumento,
+                        Correo = UsuarioEncontrado.Correo,
+                        Nombre = UsuarioEncontrado.Nombre,
+                    },
+                };
                 return Ok(RespuestaUsuario);
             }
             else if (UsuarioEncontrado == null && AdminEncontrado != null)
@@ -136,7 +145,7 @@ namespace Grandes_Amigos.Api
                     new AuthenticationProperties
                     {
                         IsPersistent = true,
-                        ExpiresUtc = DateTime.UtcNow.AddHours(12)
+                        ExpiresUtc = DateTime.UtcNow.AddHours(12),
                     }
                 );
 
@@ -146,8 +155,8 @@ namespace Grandes_Amigos.Api
                     admin = new
                     {
                         NombreUsuario = AdminEncontrado.NombreUsuario,
-                        IdMinisterio = AdminEncontrado.IdMinisterio
-                    }
+                        IdMinisterio = AdminEncontrado.IdMinisterio,
+                    },
                 };
                 return Ok(RespuestaAdmin);
             }
@@ -158,4 +167,3 @@ namespace Grandes_Amigos.Api
         }
     }
 }
-

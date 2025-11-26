@@ -112,7 +112,7 @@ public class EventosController : Controller
         );
     }
 
-    [Authorize(Policy="Ministerio")]
+    [Authorize(Policy = "Ministerio")]
     [HttpPost("Nuevo")]
     public IActionResult NuevoEvento([FromForm] Evento NuevoEvento, IFormFile? Foto)
     {
@@ -165,10 +165,7 @@ public class EventosController : Controller
             {
                 Contexto.Eventos.Add(NuevoEvento);
                 Contexto.SaveChanges();
-                return CreatedAtAction(
-                    nameof(VerEvento),
-                    new { id = NuevoEvento.ID }
-                );
+                return CreatedAtAction(nameof(VerEvento), new { id = NuevoEvento.ID });
             }
             else
             {

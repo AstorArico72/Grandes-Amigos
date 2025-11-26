@@ -5,11 +5,11 @@
 // se obtienen desde JS llamando a /Api/* con Bearer.
 
 using System;
+using System.Linq;
+using System.Security.Claims;
 using Grandes_Amigos.Models;
 using Grandes_Amigos.Models.ViewModels;
-using System.Linq;
 using Microsoft.AspNetCore.Authentication;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,8 +31,8 @@ namespace Grandes_Amigos.Controllers
 
         private bool EsSuperAdmin()
         {
-            var ministerio = User?.FindFirst("AdminMinisterio")?.Value
-                ?? User?.FindFirst("IdMinisterio")?.Value;
+            var ministerio =
+                User?.FindFirst("AdminMinisterio")?.Value ?? User?.FindFirst("IdMinisterio")?.Value;
             return ministerio == "1";
         }
 
@@ -40,13 +40,20 @@ namespace Grandes_Amigos.Controllers
         {
             var salt = _cfg["Salt"];
             if (string.IsNullOrEmpty(salt))
-                throw new InvalidOperationException("Falta configurar 'Salt' para hashear contrasenas.");
+                throw new InvalidOperationException(
+                    "Falta configurar 'Salt' para hashear contrasenas."
+                );
 
             return Convert.ToBase64String(
                 Microsoft.AspNetCore.Cryptography.KeyDerivation.KeyDerivation.Pbkdf2(
                     password: clave,
                     salt: System.Text.Encoding.UTF8.GetBytes(salt),
-                    prf: Microsoft.AspNetCore.Cryptography.KeyDerivation.KeyDerivationPrf.HMACSHA256,
+                    prf: Microsoft
+                        .AspNetCore
+                        .Cryptography
+                        .KeyDerivation
+                        .KeyDerivationPrf
+                        .HMACSHA256,
                     iterationCount: 4096,
                     numBytesRequested: 256 / 8
                 )
@@ -159,7 +166,10 @@ namespace Grandes_Amigos.Controllers
             );
             if (existe)
             {
-                ModelState.AddModelError(string.Empty, "Ya existe un administrador con ese usuario o correo.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Ya existe un administrador con ese usuario o correo."
+                );
                 return View("~/Views/Admin/NuevoAdministrador.cshtml", model);
             }
 
@@ -225,7 +235,10 @@ namespace Grandes_Amigos.Controllers
             );
             if (existe)
             {
-                ModelState.AddModelError(string.Empty, "Ya existe otro administrador con ese usuario o correo.");
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Ya existe otro administrador con ese usuario o correo."
+                );
                 return View("~/Views/Admin/NuevoAdministrador.cshtml", model);
             }
 
@@ -237,7 +250,10 @@ namespace Grandes_Amigos.Controllers
             {
                 if (model.Clave != model.ConfirmarClave)
                 {
-                    ModelState.AddModelError(nameof(model.ConfirmarClave), "Las contrasenas no coinciden.");
+                    ModelState.AddModelError(
+                        nameof(model.ConfirmarClave),
+                        "Las contrasenas no coinciden."
+                    );
                     return View("~/Views/Admin/NuevoAdministrador.cshtml", model);
                 }
 
@@ -269,7 +285,11 @@ namespace Grandes_Amigos.Controllers
         // POST /Admin/EstablecerCookie
         [HttpPost("EstablecerCookie")]
         [AllowAnonymous]
-        public async Task<IActionResult> EstablecerCookie([FromForm] string nombre, [FromForm] string ministerio, [FromForm] string id)
+        public async Task<IActionResult> EstablecerCookie(
+            [FromForm] string nombre,
+            [FromForm] string ministerio,
+            [FromForm] string id
+        )
         {
             var claims = new List<Claim>
             {
