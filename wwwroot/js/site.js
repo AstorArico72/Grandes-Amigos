@@ -39,7 +39,7 @@ $(document).ready(function () {
 });
 
 //------------------------------------------------------------
-// VALIDACIÓN DE REGISTRO
+// VALIDACIÓN REGISTRO
 //------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
 	const form = document.querySelector('#register form');
@@ -149,7 +149,7 @@ document.addEventListener('click', function (e) {
 });
 
 //------------------------------------------------------------
-// LOGIN + GUARDADO TOKEN
+// LOGIN + TOKEN
 //------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
 	const loginForm = document.querySelector('#login form');
@@ -192,6 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 	});
 
+	// Header dinámico
 	const token = localStorage.getItem('jwt_token_inscrito');
 	const nombre = localStorage.getItem('nombre_inscrito');
 
@@ -273,8 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </small>
                             </div>
                         </div>
-                    </div>
-                `
+                    </div>`
 					)
 					.join('');
 			})
@@ -285,51 +285,166 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 //------------------------------------------------------------
-// *** MINISTERIOS — VERSIÓN CORRECTA (ÚNICA)
+// INSCRIPCIÓN — LÓGICA ORIGINAL COMPLETA
 //------------------------------------------------------------
-(function () {
-	const ministeriosContainer = document.getElementById('ministerios-container');
-	const modalElement = document.getElementById('modalEventosMinisterio');
+document.addEventListener('DOMContentLoaded', function () {
+	let eventoSeleccionadoId = null;
 
-	if (!ministeriosContainer) return;
+	document.querySelectorAll('.btn-inscribirse').forEach((btn) => {
+		btn.addEventListener('click', function () {
+			eventoSeleccionadoId = this.getAttribute('data-evento-id');
+			const btnConfirmar = document.getElementById('btnConfirmarInscripcion');
+			btnConfirmar.disabled = true;
+			btnConfirmar.textContent = 'Verificando...';
 
-	// MODAL OMITIDO HASTA QUE ME CONFIRMES QUE EXISTE EN ESTA VISTA
-	// -------------------------------------------------------------
+			document.getElementById('infoEventoModal').innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-info" role="status"></div>
+                </div>`;
 
-	function cargarMinisteriosPublicos() {
-		fetch('/Api/Ministerios/Publicos')
-			.then((r) => r.json())
-			.then((ministerios) => {
-				if (!ministerios.length) {
-					ministeriosContainer.innerHTML = `<div class="col-12 text-center text-muted">No hay ministerios disponibles.</div>`;
-					return;
-				}
-
-				ministeriosContainer.innerHTML = ministerios
-					.map(
-						(m) => `
-                    <div class="col">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">${m.nombre}</h5>
-                                <p class="card-text">Actividades y eventos disponibles.</p>
+			fetch(`/Api/Eventos/${eventoSeleccionadoId}`)
+				.then((resp) => resp.json())
+				.then((evento) => {
+					document.getElementById('infoEventoModal').innerHTML = `
+                        <div class="row align-items-center">
+                            <div class="col-md-5 text-center mb-3">
+                                <img src="${
+																	evento.foto
+																}" class="img-fluid rounded shadow" style="max-height:220px;object-fit:cover;">
                             </div>
-                        </div>
-                    </div>
-                `
-					)
-					.join('');
-			})
-			.catch(() => {
-				ministeriosContainer.innerHTML = `<div class="alert alert-danger">Error al cargar ministerios.</div>`;
-			});
-	}
+                            <div class="col-md-7">
+                                <h4 class="fw-bold mb-2">${evento.título}</h4>
+                                <p class="mb-1"><i class="bi bi-calendar-event"></i> <strong>Fecha:</strong>
+                                ${new Date(evento.fecha).toLocaleString(
+																	'es-AR',
+																	{ dateStyle: 'long', timeStyle: 'short' }
+																)}</p>
+                                <p class="mb-1"><i class="bi bi-people"></i> <strong>Ministerio:</strong> ${
+																	evento.ministerioNombre ||
+																	evento.id_Ministerio
+																}</p>
+                                <p><i class="bi bi-info-circle"></i> <strong>Descripción:</strong> ${
+																	evento.descripcion || ''
+																}</p>
+                            </div>
+                        </div>`;
 
-	cargarMinisteriosPublicos();
-})();
+					const token = localStorage.getItem('jwt_token_inscrito');
+					if (!token) {
+						btnConfirmar.disabled = true;
+						btnConfirmar.textContent = 'Iniciá sesión para inscribirte';
+						return;
+					}
+
+					function parseJwt(t) {
+						try {
+							return JSON.parse(atob(t.split('.')[1]));
+						} catch {
+							return null;
+						}
+					}
+
+					const payload = parseJwt(token);
+					const userId =
+						payload && (payload.NumDocumento || payload.numDocumento);
+
+					if (!userId) {
+						btnConfirmar.disabled = true;
+						btnConfirmar.textContent = 'Error de usuario';
+						return;
+					}
+
+					fetch(
+						`/Api/Inscripciones/Existe?eventoId=${eventoSeleccionadoId}&usuarioId=${userId}`,
+						{
+							headers: { Authorization: 'Bearer ' + token },
+						}
+					)
+						.then((resp) => resp.json())
+						.then((data) => {
+							if (data.inscripto) {
+								btnConfirmar.disabled = true;
+								btnConfirmar.textContent = 'Ya inscrito';
+							} else {
+								btnConfirmar.disabled = false;
+								btnConfirmar.textContent = 'Inscribirse';
+							}
+						})
+						.catch(() => {
+							btnConfirmar.disabled = true;
+							btnConfirmar.textContent = 'Error al verificar';
+						});
+				})
+				.catch(() => {
+					document.getElementById(
+						'infoEventoModal'
+					).innerHTML = `<div class="alert alert-danger">No se pudo cargar la información del evento.</div>`;
+					btnConfirmar.disabled = true;
+					btnConfirmar.textContent = 'Error';
+				});
+		});
+	});
+
+	document
+		.getElementById('btnConfirmarInscripcion')
+		.addEventListener('click', function () {
+			const btn = this;
+			if (btn.disabled) return;
+
+			const token = localStorage.getItem('jwt_token_inscrito');
+			if (!token) {
+				Swal.fire('Debes iniciar sesión para inscribirte.', '', 'warning');
+				return;
+			}
+
+			function parseJwt(t) {
+				try {
+					return JSON.parse(atob(t.split('.')[1]));
+				} catch {
+					return null;
+				}
+			}
+
+			const payload = parseJwt(token);
+			const userId = payload && (payload.NumDocumento || payload.numDocumento);
+
+			if (!userId) {
+				Swal.fire('Error obteniendo usuario', '', 'error');
+				return;
+			}
+
+			fetch('/Api/Inscripciones', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: 'Bearer ' + token,
+				},
+				body: JSON.stringify({
+					id_Evento: eventoSeleccionadoId,
+					id_Inscrito: userId,
+				}),
+			}).then((resp) => {
+				if (resp.ok) {
+					Swal.fire('¡Inscripción exitosa!', '', 'success');
+					bootstrap.Modal.getInstance(
+						document.getElementById('inscripcionModal')
+					).hide();
+				} else {
+					resp.text().then((text) => {
+						let msg = 'Error al inscribirse';
+						try {
+							const d = JSON.parse(text);
+							msg = d.message || msg;
+						} catch {}
+						Swal.fire('Error', msg, 'error');
+					});
+				}
+			});
+		});
+});
 
 //------------------------------------------------------------
-// MINISTERIOS + MODAL VER MÁS
+// MINISTERIOS + MODAL
 //------------------------------------------------------------
 (function () {
 	const ministeriosContainer = document.getElementById('ministerios-container');
@@ -342,9 +457,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const modalContenido = document.getElementById('modalEventosContenido');
 	const modalAlert = document.getElementById('modalEventosAlert');
 
-	// --------------------------------------------------------
-	// Render eventos en el modal
-	// --------------------------------------------------------
 	function renderEventosMinisterio(eventos) {
 		modalSpinner.classList.add('d-none');
 		modalAlert.classList.add('d-none');
@@ -393,9 +505,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// --------------------------------------------------------
-	// Abrir modal
-	// --------------------------------------------------------
 	function abrirModalMinisterio(nombreMinisterio) {
 		modalTitulo.textContent = `Eventos de ${nombreMinisterio}`;
 		modalContenido.innerHTML = '';
@@ -420,9 +529,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 	}
 
-	// --------------------------------------------------------
-	// Cargar ministerios + botón
-	// --------------------------------------------------------
 	function cargarMinisteriosPublicos() {
 		fetch('/Api/Ministerios/Publicos')
 			.then((r) => r.json())
@@ -444,12 +550,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `
+                    </div>`
 					)
 					.join('');
 
-				// ASIGNAR CLICK A BOTONES
 				ministeriosContainer.querySelectorAll('.btn-ver-mas').forEach((btn) => {
 					btn.addEventListener('click', () => {
 						abrirModalMinisterio(btn.dataset.ministerio);
