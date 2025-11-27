@@ -2,34 +2,26 @@
     <div class="container text-center">
         <h2 class="titulo-ovalo">Actividades por Ministerio</h2>
 
-        <div class="row row-cols-1 row-cols-md-3 g-4 mt-4">
-            <div class="col seccion-animada">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">ULP</h5>
-                        <p class="card-text">Cursos, talleres y actividades tecnológicas.</p>
-                        <a href="/Api/Eventos/PorMinisterio/ulp" class="btn btn-outline-primary">Ver más</a>
-                    </div>
-                </div>
+        <div id="ministerios-container" class="row row-cols-1 row-cols-md-3 g-4 mt-4"></div>
+    </div>
+</section>
+
+<div class="modal fade" id="modalEventosMinisterio" tabindex="-1" aria-labelledby="modalEventosMinisterioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEventosMinisterioLabel">Eventos por ministerio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="col seccion-animada">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Turismo</h5>
-                        <p class="card-text">Excursiones y paseos para disfrutar de la provincia.</p>
-                        <a href="/Api/Eventos/PorMinisterio/turismo" class="btn btn-outline-primary">Ver más</a>
+            <div class="modal-body">
+                <div id="modalEventosAlert" class="alert alert-danger d-none"></div>
+                <div id="modalEventosSpinner" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
                     </div>
                 </div>
-            </div>
-            <div class="col seccion-animada">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">Salud</h5>
-                        <p class="card-text">Jornadas de salud, chequeos y promoción del bienestar.</p>
-                        <a href="/Api/Eventos/PorMinisterio/salud" class="btn btn-outline-primary">Ver más</a>
-                    </div>
-                </div>
+                <div id="modalEventosContenido" class="row g-3"></div>
             </div>
         </div>
     </div>
-</section>
+</div>

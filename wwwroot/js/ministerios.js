@@ -68,7 +68,7 @@
 			'<tr><td colspan="3" class="text-center py-4 text-secondary">Cargando...</td></tr>';
 
 		try {
-			const res = await apiFetch('/api/v1/Ministerios/Lista', { headers: authHeaders });
+			const res = await apiFetch('/Api/Ministerios/Lista', { headers: authHeaders });
 			const data = await res.json();
 
 			if (!Array.isArray(data) || data.length === 0) {
@@ -126,7 +126,7 @@
 		if (!result.isConfirmed || !result.value) return;
 
 		try {
-			await apiFetch('/api/v1/Ministerios/Crear', {
+			await apiFetch('/Api/Ministerios/Crear', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json', ...authHeaders },
 				body: JSON.stringify(result.value),
@@ -146,7 +146,7 @@
 	async function abrirEditarMinisterio(id) {
 		if (!id) return;
 		try {
-			const res = await apiFetch(`/api/v1/Ministerios/${id}`, {
+			const res = await apiFetch(`/Api/Ministerios/${id}`, {
 				headers: authHeaders,
 			});
 			const data = await res.json();
@@ -154,7 +154,7 @@
 			const result = await abrirFormulario('Editar ministerio', data.nombre ?? data.Nombre ?? '');
 			if (!result.isConfirmed || !result.value) return;
 
-			await apiFetch(`/api/v1/Ministerios/Editar/${id}`, {
+			await apiFetch(`/Api/Ministerios/Editar/${id}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json', ...authHeaders },
 				body: JSON.stringify(result.value),
@@ -183,7 +183,7 @@
 		}).then(async (r) => {
 			if (!r.isConfirmed) return;
 			try {
-				await apiFetch(`/api/v1/Ministerios/Eliminar/${id}`, {
+				await apiFetch(`/Api/Ministerios/Eliminar/${id}`, {
 					method: 'DELETE',
 					headers: authHeaders,
 				});

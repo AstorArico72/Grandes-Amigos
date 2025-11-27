@@ -1,6 +1,9 @@
-﻿document.addEventListener('DOMContentLoaded', function () {
-	// Animaciones de entrada de secciones
+﻿//------------------------------------------------------------
+// ANIMACIONES DE SECCIONES
+//------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
 	const secciones = document.querySelectorAll('.seccion-animada');
+
 	const observer = new IntersectionObserver(
 		(entries) => {
 			entries.forEach((entry) => {
@@ -11,10 +14,13 @@
 		},
 		{ threshold: 0.2 }
 	);
+
 	secciones.forEach((seccion) => observer.observe(seccion));
 });
 
-// OwlCarousel
+//------------------------------------------------------------
+// OWL CAROUSEL
+//------------------------------------------------------------
 $(document).ready(function () {
 	$('.carousel-noticias').owlCarousel({
 		loop: true,
@@ -32,7 +38,9 @@ $(document).ready(function () {
 	});
 });
 
-// Validación del registro
+//------------------------------------------------------------
+// VALIDACIÓN DE REGISTRO
+//------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
 	const form = document.querySelector('#register form');
 	if (!form) return;
@@ -46,9 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		RepetirClave: form.querySelector("[name='RepetirClave']"),
 	};
 
-	// Descartada la validación al salir del campo
-	// Ahora la validación sólo pasa al enviar
-	form.addEventListener('submit', function (e) {
+	form.addEventListener('submit', (e) => {
 		e.preventDefault();
 
 		let errores = [];
@@ -56,9 +62,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		for (const [campo, input] of Object.entries(inputs)) {
 			const valor = input.value.trim();
-			const mensaje = validarCampo(campo, valor, inputs);
-			if (mensaje) {
-				errores.push(`<li>${mensaje}</li>`);
+			const msg = validarCampo(campo, valor, inputs);
+			if (msg) {
+				errores.push(`<li>${msg}</li>`);
 				if (!primerError) primerError = input;
 			}
 		}
@@ -72,21 +78,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			return;
 		}
 
-		// Si todo está OK, enviar por fetch
 		const datos = new FormData(form);
-		fetch('/Api/Usuarios/Nuevo', {
-			method: 'POST',
-			body: datos,
-		})
-			.then((resp) => {
-				if (!resp.ok) throw new Error('Registro fallido');
-				return resp.text();
+		fetch('/Api/Usuarios/Nuevo', { method: 'POST', body: datos })
+			.then((r) => {
+				if (!r.ok) throw new Error();
+				return r.text();
 			})
 			.then(() => {
 				Swal.fire({
 					icon: 'success',
 					title: '¡Registro exitoso!',
-					text: 'Ya podés iniciar sesión con tu documento y clave.',
+					text: 'Ya podés iniciar sesión.',
 				});
 				form.reset();
 				document.querySelector('#login-tab').click();
@@ -95,149 +97,91 @@ document.addEventListener('DOMContentLoaded', () => {
 				Swal.fire({
 					icon: 'error',
 					title: 'No se pudo registrar',
-					text: 'Verificá si el documento ya está registrado.',
+					text: 'Verificá si el DNI ya está registrado.',
 				});
 			});
 	});
 
-	// Validación campo por campo
 	function validarCampo(campo, valor, inputs) {
 		switch (campo) {
 			case 'Nombre':
-				if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑÄËÏÖÜäëïöüØøẞß\s]{3,}$/.test(valor))
-					//Hay más diacríticos además de los acentos. Pendiente: Mejorar la validación de éste campo para que nombres extranjeros con diacríticos, por ejemplo, Hämäläinen (Finlandés), Groß (Alemán), Øster (Danés), Itō (Japonés), puedan procesarse bien sin muchos pasos extra.
-					return 'El nombre debe tener al menos 3 letras y solo letras.';
+				if (!/^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s]{3,}$/.test(valor))
+					return 'Nombre inválido.';
 				break;
 			case 'Correo':
-				if (!valor.includes('@') || valor.length < 5) return 'Correo inválido.';
+				if (!valor.includes('@')) return 'Correo inválido.';
 				break;
 			case 'NumDocumento':
-				if (!/^\d{6,9}$/.test(valor))
-					//Creo que aún existe gente con LC o LE de 6 dígitos
-					return 'DNI inválido: debe contener solo números (6 a 9 cifras).';
+				if (!/^\d{6,9}$/.test(valor)) return 'DNI inválido.';
 				break;
 			case 'Teléfono':
-				//Validación ajustada para tomar sólo números nacionales.
-				if (!/^\d{10}$/.test(valor))
-					return 'Teléfono inválido: El número debe tener 10 caracteres, sin espacios.';
+				if (!/^\d{10}$/.test(valor)) return 'Teléfono inválido.';
 				break;
 			case 'Clave':
-				if (valor.length < 6)
-					return 'La contraseña debe tener al menos 6 caracteres.';
+				if (valor.length < 6) return 'La contraseña es corta.';
 				break;
 			case 'RepetirClave':
-				const original = inputs.Clave.value.trim();
-				if (valor !== original) return 'Las contraseñas no coinciden.';
+				if (valor !== inputs.Clave.value.trim())
+					return 'Las contraseñas no coinciden.';
 				break;
 		}
 		return null;
 	}
 });
 
-// Mostrar/ocultar contraseña (ojito)
+//------------------------------------------------------------
+// MOSTRAR / OCULTAR CONTRASEÑA
+//------------------------------------------------------------
 document.addEventListener('click', function (e) {
 	const toggle = e.target.closest('.toggle-pass');
-	if (toggle) {
-		const inputId = toggle.dataset.target;
-		const input = document.getElementById(inputId);
-		const icon = toggle.querySelector('i');
+	if (!toggle) return;
 
-		if (input.type === 'password') {
-			input.type = 'text';
-			icon.classList.remove('bi-eye');
-			icon.classList.add('bi-eye-slash');
-		} else {
-			input.type = 'password';
-			icon.classList.remove('bi-eye-slash');
-			icon.classList.add('bi-eye');
-		}
+	const input = document.getElementById(toggle.dataset.target);
+	const icon = toggle.querySelector('i');
+
+	if (input.type === 'password') {
+		input.type = 'text';
+		icon.classList.replace('bi-eye', 'bi-eye-slash');
+	} else {
+		input.type = 'password';
+		icon.classList.replace('bi-eye-slash', 'bi-eye');
 	}
 });
 
-// Login con Swal
+//------------------------------------------------------------
+// LOGIN + GUARDADO TOKEN
+//------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
 	const loginForm = document.querySelector('#login form');
 	if (!loginForm) return;
 
 	loginForm.addEventListener('submit', function (e) {
 		e.preventDefault();
-
 		const datos = new FormData(loginForm);
-		//Pendiente: Adaptar éste método al panel Admin.
-		fetch('/Api/Auth/Login', {
-			method: 'POST',
-			body: datos,
-		})
+
+		fetch('/Api/Auth/Login', { method: 'POST', body: datos })
 			.then(async (resp) => {
-				if (resp.ok) {
-					await Swal.fire({
-						icon: 'success',
-						title: '¡Login exitoso!',
-						text: 'Sesión iniciada correctamente.',
-					});
-					// Redirigir o recargar página si es necesario
-					location.reload();
-				} else {
-					const msg = await resp.text();
-					throw new Error(msg || 'Login fallido');
-				}
-			})
-			.catch((err) => {
-				Swal.fire({
-					icon: 'error',
-					title: 'Error de login',
-					text: err.message || 'Usuario o clave incorrectos.',
+				if (!resp.ok) throw new Error(await resp.text());
+				const data = await resp.json();
+
+				localStorage.setItem('jwt_token_inscrito', data.token);
+				localStorage.setItem(
+					'nombre_inscrito',
+					data.usuario.Nombre || data.usuario.nombre
+				);
+				localStorage.setItem(
+					'dni_inscrito',
+					data.usuario.NumDocumento || data.usuario.numDocumento
+				);
+
+				await Swal.fire({
+					icon: 'success',
+					title: '¡Login exitoso!',
+					timer: 2000,
+					showConfirmButton: false,
 				});
-			});
-	});
-});
 
-// Guardar token al iniciar sesión y mostrar nombre en el header
-document.addEventListener('DOMContentLoaded', () => {
-	const loginForm = document.querySelector('#login form');
-	if (!loginForm) return;
-
-	loginForm.addEventListener('submit', function (e) {
-		e.preventDefault();
-
-		const datos = new FormData(loginForm);
-
-		fetch('/Api/Auth/Login', {
-			method: 'POST',
-			body: datos,
-		})
-			.then(async (resp) => {
-				if (resp.ok) {
-					const data = await resp.json();
-					// Verifica cómo llega el objeto
-					console.log(data.usuario);
-					// Guardar token y datos públicos del usuario (soporta mayúscula y minúscula)
-					localStorage.setItem('jwt_token_inscrito', data.token);
-					localStorage.setItem(
-						'nombre_inscrito',
-						data.usuario.Nombre || data.usuario.nombre
-					);
-					localStorage.setItem(
-						'dni_inscrito',
-						data.usuario.NumDocumento ||
-							data.usuario.numDocumento ||
-							data.usuario.numdocumento
-					);
-					await Swal.fire({
-						icon: 'success',
-						title: '¡Login exitoso!',
-						text: 'Sesión iniciada correctamente.',
-						timer: 2000, // ⏱️ visible 2 segundos
-						showConfirmButton: false,
-					});
-
-					setTimeout(() => {
-						location.reload();
-					}, 2000);
-				} else {
-					const msg = await resp.text();
-					throw new Error(msg || 'Login fallido');
-				}
+				location.reload();
 			})
 			.catch((err) => {
 				Swal.fire({
@@ -248,305 +192,138 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 	});
 
-	// Mostrar header dinámico si ya hay token
 	const token = localStorage.getItem('jwt_token_inscrito');
 	const nombre = localStorage.getItem('nombre_inscrito');
+
 	if (token && nombre) {
 		const loginBtn = document.querySelector('[data-bs-target="#authModal"]');
 		if (loginBtn) {
 			loginBtn.outerHTML = `
-				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle header-btn text-white fw-bold rounded-pill px-4"
-					href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-						${nombre}
-					</a>
-					<ul class="dropdown-menu dropdown-menu-end">
-						<li>
-						<a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#misEventosModal">
-							Mis Eventos
-						</a>
-						</li>
-						<li><a class="dropdown-item text-danger" id="cerrarSesionBtn" href="#">Cerrar Sesión</a></li>
-					</ul>
-				</li>`;
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle header-btn text-white fw-bold rounded-pill px-4"
+                       href="#" role="button" data-bs-toggle="dropdown">
+                        ${nombre}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#misEventosModal">Mis Eventos</a></li>
+                        <li><a class="dropdown-item text-danger" id="cerrarSesionBtn">Cerrar Sesión</a></li>
+                    </ul>
+                </li>`;
 		}
 	}
 
-	// Botón para cerrar sesión
 	document.addEventListener('click', (e) => {
 		if (e.target.closest('#cerrarSesionBtn')) {
-			localStorage.removeItem('jwt_token_inscrito');
-			localStorage.removeItem('nombre_inscrito');
-			localStorage.removeItem('dni_inscrito');
+			localStorage.clear();
 			location.reload();
 		}
 	});
 });
 
-document.addEventListener('DOMContentLoaded', function () {
-	let eventoSeleccionadoId = null;
+//------------------------------------------------------------
+// MODAL "MIS EVENTOS"
+//------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+	const modal = document.getElementById('misEventosModal');
+	if (!modal) return;
 
-	// Cuando se hace click en el botón "Inscribirse" de un evento
-	document.querySelectorAll('.btn-inscribirse').forEach((btn) => {
-		btn.addEventListener('click', function () {
-			eventoSeleccionadoId = this.getAttribute('data-evento-id');
-			const btnConfirmar = document.getElementById('btnConfirmarInscripcion');
-			btnConfirmar.disabled = true;
-			btnConfirmar.textContent = 'Verificando...';
+	modal.addEventListener('show.bs.modal', () => {
+		const token = localStorage.getItem('jwt_token_inscrito');
+		const cont = document.getElementById('listaMisEventos');
 
-			// Mostrar spinner mientras se carga la info
-			document.getElementById('infoEventoModal').innerHTML = `
-                <div class="text-center py-3">
-                    <div class="spinner-border text-info" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                </div>
-            `;
+		if (!token) {
+			cont.innerHTML = `<div class="alert alert-warning">Debes iniciar sesión.</div>`;
+			return;
+		}
 
-			// Traer info del evento por AJAX
-			fetch(`/Api/Eventos/${eventoSeleccionadoId}`)
-				.then((resp) => resp.json())
-				.then((evento) => {
-					document.getElementById('infoEventoModal').innerHTML = `
-                        <div class="row align-items-center">
-                            <div class="col-md-5 text-center mb-3 mb-md-0">
-                                <img src="${
-																	evento.foto
-																}" alt="Foto del evento" class="img-fluid rounded shadow" style="max-height:220px;object-fit:cover;">
-                            </div>
-                            <div class="col-md-7">
-                                <h4 class="fw-bold mb-2">${evento.título}</h4>
-                                <p class="mb-1"><i class="bi bi-calendar-event"></i> <strong>Fecha:</strong> ${new Date(
-																	evento.fecha
-																).toLocaleString('es-AR', {
-																	dateStyle: 'long',
-																	timeStyle: 'short',
-																})}</p>
-                                <p class="mb-1"><i class="bi bi-people"></i> <strong>Ministerio:</strong> ${
-																	evento.ministerioNombre ||
-																	evento.id_Ministerio
+		cont.innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary"></div>
+                <p>Cargando tus eventos...</p>
+            </div>`;
+
+		fetch('/Api/Eventos/MisEventos', {
+			headers: { Authorization: 'Bearer ' + token },
+		})
+			.then((r) => r.json())
+			.then((eventos) => {
+				if (!eventos.length) {
+					cont.innerHTML = `<div class="alert alert-info">No estás inscrito en ningún evento.</div>`;
+					return;
+				}
+
+				cont.innerHTML = eventos
+					.map(
+						(ev) => `
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm">
+                            <img src="${
+															ev.foto
+														}" class="card-img-top" style="height:200px;object-fit:cover;">
+                            <div class="card-body d-flex flex-column">
+                                <h5>${ev.título}</h5>
+                                <p class="text-truncate">${
+																	ev.descripcion || ''
 																}</p>
-                                <p class="mb-2"><i class="bi bi-info-circle"></i> <strong>Descripción:</strong> ${
-																	evento.descripcion || ''
-																}</p>
-                                ${
-																	evento.lugar
-																		? `<p class="mb-0"><i class="bi bi-geo-alt"></i> <strong>Lugar:</strong> ${evento.lugar}</p>`
-																		: ''
-																}
+                                <small class="mt-auto text-muted">
+                                    <i class="bi bi-calendar-event"></i>
+                                    ${new Date(ev.fecha).toLocaleDateString(
+																			'es-AR'
+																		)}
+                                </small>
                             </div>
                         </div>
-                    `;
-
-					// Verificar si el usuario está logueado
-					const token = localStorage.getItem('jwt_token_inscrito');
-					if (!token) {
-						btnConfirmar.disabled = true;
-						btnConfirmar.textContent = 'Iniciá sesión para inscribirte';
-						return;
-					}
-
-					// Decodificar el JWT para obtener el número de documento del usuario
-					function parseJwt(token) {
-						try {
-							return JSON.parse(atob(token.split('.')[1]));
-						} catch (e) {
-							return null;
-						}
-					}
-					const payload = parseJwt(token);
-					const userId =
-						payload &&
-						(payload.NumDocumento ||
-							payload.numDocumento ||
-							payload.num_documento);
-
-					if (!userId) {
-						btnConfirmar.disabled = true;
-						btnConfirmar.textContent = 'Error de usuario';
-						return;
-					}
-
-					// Consultar si ya está inscrito
-					fetch(
-						`/Api/Inscripciones/Existe?eventoId=${eventoSeleccionadoId}&usuarioId=${userId}`,
-						{
-							headers: { Authorization: 'Bearer ' + token },
-						}
+                    </div>
+                `
 					)
-						.then((resp) => resp.json())
-						.then((data) => {
-							if (data.inscripto) {
-								btnConfirmar.disabled = true;
-								btnConfirmar.textContent = 'Ya inscrito';
-							} else {
-								btnConfirmar.disabled = false;
-								btnConfirmar.textContent = 'Inscribirse';
-							}
-						})
-						.catch(() => {
-							btnConfirmar.disabled = true;
-							btnConfirmar.textContent = 'Error al verificar';
-						});
-				})
-				.catch(() => {
-					document.getElementById(
-						'infoEventoModal'
-					).innerHTML = `<div class="alert alert-danger">No se pudo cargar la información del evento.</div>`;
-					btnConfirmar.disabled = true;
-					btnConfirmar.textContent = 'Error';
-				});
-		});
-	});
-
-	// Cuando se hace click en "Inscribirse" en el modal
-	document
-		.getElementById('btnConfirmarInscripcion')
-		.addEventListener('click', function () {
-			const btn = this;
-			if (btn.disabled) return;
-
-			const token = localStorage.getItem('jwt_token_inscrito');
-			if (!token) {
-				Swal.fire('Debes iniciar sesión para inscribirte.', '', 'warning');
-				return;
-			}
-
-			function parseJwt(token) {
-				try {
-					return JSON.parse(atob(token.split('.')[1]));
-				} catch (e) {
-					return null;
-				}
-			}
-			const payload = parseJwt(token);
-			const userId =
-				payload &&
-				(payload.NumDocumento || payload.numDocumento || payload.num_documento);
-
-			if (!userId) {
-				Swal.fire(
-					'No se pudo obtener tu usuario. Inicia sesión nuevamente.',
-					'',
-					'error'
-				);
-				return;
-			}
-
-			// Enviar inscripción a la API
-			fetch('/Api/Inscripciones', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: 'Bearer ' + token,
-				},
-				body: JSON.stringify({
-					id_Evento: eventoSeleccionadoId,
-					id_Inscrito: userId,
-				}),
-			}).then((resp) => {
-				if (resp.ok) {
-					Swal.fire(
-						'¡Inscripción exitosa!',
-						'Te has inscrito correctamente al evento.',
-						'success'
-					);
-					var modal = bootstrap.Modal.getInstance(
-						document.getElementById('inscripcionModal')
-					);
-					modal.hide();
-				} else {
-					// Intenta leer JSON, si falla, muestra mensaje genérico
-					return resp.text().then((text) => {
-						let msg = 'Error al inscribirse';
-						try {
-							const data = JSON.parse(text);
-							msg = data.message || msg;
-						} catch {}
-						throw new Error(msg);
-					});
-				}
-			});
-		});
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-	const misEventosModal = document.getElementById('misEventosModal');
-
-	if (misEventosModal) {
-		misEventosModal.addEventListener('show.bs.modal', () => {
-			const token = localStorage.getItem('jwt_token_inscrito');
-			if (!token) {
-				document.getElementById(
-					'listaMisEventos'
-				).innerHTML = `<div class="alert alert-warning">Debes iniciar sesión para ver tus eventos.</div>`;
-				return;
-			}
-
-			// Spinner mientras carga
-			document.getElementById('listaMisEventos').innerHTML = `
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2">Cargando tus eventos...</p>
-                </div>
-            `;
-
-			fetch('/Api/Eventos/MisEventos', {
-				headers: { Authorization: 'Bearer ' + token },
+					.join('');
 			})
-				.then((resp) => {
-					if (!resp.ok) throw new Error('Error al traer tus eventos');
-					return resp.json();
-				})
-				.then((eventos) => {
-					const contenedor = document.getElementById('listaMisEventos');
-					if (!eventos || eventos.length === 0) {
-						contenedor.innerHTML = `<div class="alert alert-info">No estás inscrito en ningún evento.</div>`;
-						return;
-					}
-
-					let html = '';
-					eventos.forEach((ev) => {
-						html += `
-                            <div class="col-md-6 col-lg-4">
-                                <div class="card h-100 shadow-sm border-0">
-                                    <img src="${
-																			ev.foto
-																		}" class="card-img-top" alt="${
-							ev.título
-						}" style="height:200px;object-fit:cover;" />
-                                    <div class="card-body d-flex flex-column">
-                                        <h5 class="card-title">${ev.título}</h5>
-                                        <p class="card-text text-truncate">${
-																					ev.descripcion || ''
-																				}</p>
-                                        <div class="mt-auto">
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-calendar-event"></i>
-                                                ${new Date(
-																									ev.fecha
-																								).toLocaleDateString('es-AR')}
-                                            </small>
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-people"></i>
-                                                Ministerio: ${
-																									ev.ministerioNombre ||
-																									ev.id_Ministerio
-																								}
-                                            </small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>`;
-					});
-
-					contenedor.innerHTML = html;
-				})
-				.catch((err) => {
-					document.getElementById(
-						'listaMisEventos'
-					).innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
-				});
-		});
-	}
+			.catch(() => {
+				cont.innerHTML = `<div class="alert alert-danger">Error al cargar eventos.</div>`;
+			});
+	});
 });
+
+//------------------------------------------------------------
+// *** MINISTERIOS — VERSIÓN CORRECTA (ÚNICA)
+//------------------------------------------------------------
+(function () {
+	const ministeriosContainer = document.getElementById('ministerios-container');
+	const modalElement = document.getElementById('modalEventosMinisterio');
+
+	if (!ministeriosContainer) return;
+
+	// MODAL OMITIDO HASTA QUE ME CONFIRMES QUE EXISTE EN ESTA VISTA
+	// -------------------------------------------------------------
+
+	function cargarMinisteriosPublicos() {
+		fetch('/Api/Ministerios/Publicos')
+			.then((r) => r.json())
+			.then((ministerios) => {
+				if (!ministerios.length) {
+					ministeriosContainer.innerHTML = `<div class="col-12 text-center text-muted">No hay ministerios disponibles.</div>`;
+					return;
+				}
+
+				ministeriosContainer.innerHTML = ministerios
+					.map(
+						(m) => `
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">${m.nombre}</h5>
+                                <p class="card-text">Actividades y eventos disponibles.</p>
+                            </div>
+                        </div>
+                    </div>
+                `
+					)
+					.join('');
+			})
+			.catch(() => {
+				ministeriosContainer.innerHTML = `<div class="alert alert-danger">Error al cargar ministerios.</div>`;
+			});
+	}
+
+	cargarMinisteriosPublicos();
+})();

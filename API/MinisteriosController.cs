@@ -6,8 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Grandes_Amigos.Api
 {
     [ApiController]
-    [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/Ministerios")]
+    [ApiVersionNeutral]
+    [Route("/Api/Ministerios")]
     [Produces("application/json")]
     [Authorize(Policy = "Ministerio")]
     public class MinisteriosController : ControllerBase
@@ -39,13 +39,7 @@ namespace Grandes_Amigos.Api
             if (ministerio == null)
                 return NotFound();
 
-            return Ok(
-                new
-                {
-                    id = ministerio.ID,
-                    ministerio.Nombre,
-                }
-            );
+            return Ok(new { id = ministerio.ID, ministerio.Nombre });
         }
 
         [HttpPost("Crear")]
@@ -54,19 +48,16 @@ namespace Grandes_Amigos.Api
             if (nuevo == null || string.IsNullOrWhiteSpace(nuevo.Nombre))
                 return BadRequest("El nombre es obligatorio.");
 
-            var entidad = new Ministerio
-            {
-                Nombre = nuevo.Nombre.Trim(),
-            };
+            var entidad = new Ministerio { Nombre = nuevo.Nombre.Trim() };
 
             await _ctx.Ministerios.AddAsync(entidad);
             await _ctx.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(Obtener), new { id = entidad.ID }, new
-            {
-                id = entidad.ID,
-                entidad.Nombre,
-            });
+            return CreatedAtAction(
+                nameof(Obtener),
+                new { id = entidad.ID },
+                new { id = entidad.ID, entidad.Nombre }
+            );
         }
 
         [HttpPut("Editar/{id:int}")]
@@ -83,13 +74,7 @@ namespace Grandes_Amigos.Api
 
             await _ctx.SaveChangesAsync();
 
-            return Ok(
-                new
-                {
-                    id = ministerio.ID,
-                    ministerio.Nombre,
-                }
-            );
+            return Ok(new { id = ministerio.ID, ministerio.Nombre });
         }
 
         [HttpDelete("Eliminar/{id:int}")]
@@ -102,6 +87,19 @@ namespace Grandes_Amigos.Api
             _ctx.Ministerios.Remove(ministerio);
             await _ctx.SaveChangesAsync();
             return NoContent();
+        }
+
+        [AllowAnonymous]
+        [HttpGet("Publicos")]
+        public async Task<IActionResult> Publicos()
+        {
+            var ministerios = await _ctx
+                .Ministerios.Where(m => m.ID != 1) // excluir Admin
+                .OrderBy(m => m.Nombre)
+                .Select(m => new { id = m.ID, nombre = m.Nombre })
+                .ToListAsync();
+
+            return Ok(ministerios);
         }
     }
 }
