@@ -327,3 +327,139 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	cargarMinisteriosPublicos();
 })();
+
+//------------------------------------------------------------
+// MINISTERIOS + MODAL VER MÁS
+//------------------------------------------------------------
+(function () {
+	const ministeriosContainer = document.getElementById('ministerios-container');
+	const modalElement = document.getElementById('modalEventosMinisterio');
+	if (!ministeriosContainer || !modalElement) return;
+
+	const modal = new bootstrap.Modal(modalElement);
+	const modalTitulo = document.getElementById('modalEventosMinisterioLabel');
+	const modalSpinner = document.getElementById('modalEventosSpinner');
+	const modalContenido = document.getElementById('modalEventosContenido');
+	const modalAlert = document.getElementById('modalEventosAlert');
+
+	// --------------------------------------------------------
+	// Render eventos en el modal
+	// --------------------------------------------------------
+	function renderEventosMinisterio(eventos) {
+		modalSpinner.classList.add('d-none');
+		modalAlert.classList.add('d-none');
+		modalContenido.innerHTML = '';
+
+		if (!eventos || eventos.length === 0) {
+			modalContenido.innerHTML =
+				'<div class="col-12 text-center text-muted">No hay eventos próximos</div>';
+			return;
+		}
+
+		eventos.forEach((evento) => {
+			const fechaEvento = evento.fecha ? new Date(evento.fecha) : null;
+			const fechaFormateada = fechaEvento
+				? fechaEvento.toLocaleString('es-AR', {
+						dateStyle: 'long',
+						timeStyle: 'short',
+				  })
+				: 'Fecha no disponible';
+
+			const card = document.createElement('div');
+			card.className = 'col-12 col-md-6';
+
+			card.innerHTML = `
+                <div class="card h-100 shadow-sm border-0">
+                    ${
+											evento.foto
+												? `<img src="${evento.foto}" class="card-img-top" style="height:180px;object-fit:cover;">`
+												: ''
+										}
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">${
+													evento.titulo || evento.Titulo || 'Evento'
+												}</h5>
+                        <p class="text-muted mb-2"><i class="bi bi-calendar-event"></i> ${fechaFormateada}</p>
+                        <p class="card-text">${
+													evento.descripcion || 'Sin descripción'
+												}</p>
+                        <small class="text-muted mt-auto"><i class="bi bi-people"></i> Ministerio: ${
+													evento.ministerioNombre
+												}</small>
+                    </div>
+                </div>`;
+
+			modalContenido.appendChild(card);
+		});
+	}
+
+	// --------------------------------------------------------
+	// Abrir modal
+	// --------------------------------------------------------
+	function abrirModalMinisterio(nombreMinisterio) {
+		modalTitulo.textContent = `Eventos de ${nombreMinisterio}`;
+		modalContenido.innerHTML = '';
+		modalAlert.classList.add('d-none');
+		modalSpinner.classList.remove('d-none');
+		modal.show();
+
+		fetch(`/Api/Eventos/PorMinisterio/${encodeURIComponent(nombreMinisterio)}`)
+			.then((r) => {
+				if (!r.ok) throw new Error('No se pudieron obtener los eventos.');
+				return r.json();
+			})
+			.then((eventos) => {
+				const ahora = new Date();
+				const futuros = eventos.filter((ev) => new Date(ev.fecha) > ahora);
+				renderEventosMinisterio(futuros);
+			})
+			.catch((err) => {
+				modalSpinner.classList.add('d-none');
+				modalAlert.textContent = err.message;
+				modalAlert.classList.remove('d-none');
+			});
+	}
+
+	// --------------------------------------------------------
+	// Cargar ministerios + botón
+	// --------------------------------------------------------
+	function cargarMinisteriosPublicos() {
+		fetch('/Api/Ministerios/Publicos')
+			.then((r) => r.json())
+			.then((ministerios) => {
+				ministeriosContainer.innerHTML = ministerios
+					.map(
+						(m) => `
+                    <div class="col">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">${m.nombre}</h5>
+                                <p class="card-text">Actividades y eventos disponibles.</p>
+
+                                <div class="mt-auto">
+                                    <button class="btn btn-outline-primary btn-ver-mas"
+                                            data-ministerio="${m.nombre}">
+                                        Ver más
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+					)
+					.join('');
+
+				// ASIGNAR CLICK A BOTONES
+				ministeriosContainer.querySelectorAll('.btn-ver-mas').forEach((btn) => {
+					btn.addEventListener('click', () => {
+						abrirModalMinisterio(btn.dataset.ministerio);
+					});
+				});
+			})
+			.catch(() => {
+				ministeriosContainer.innerHTML = `<div class="alert alert-danger">Error al cargar ministerios.</div>`;
+			});
+	}
+
+	cargarMinisteriosPublicos();
+})();
