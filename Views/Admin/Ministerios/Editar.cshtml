@@ -1,0 +1,20 @@
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Ministerios";
+    var id = ViewData["MinisterioId"]?.ToString() ?? string.Empty;
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm">
+        <div class="card-body text-secondary">
+            Redirigiendo a la gestión de ministerios...
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        sessionStorage.setItem('ministerios_editar_id', '@id');
+        window.location.href = '/Admin/Ministerios';
+    </script>
+}

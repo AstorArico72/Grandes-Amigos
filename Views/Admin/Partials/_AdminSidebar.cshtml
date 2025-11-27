@@ -29,6 +29,13 @@
 
         @if (esSuperAdmin)
         {
+            <a class="nav-link" asp-controller="Admin" asp-action="Ministerios">
+                <i class="bi bi-building"></i> Ministerios
+            </a>
+        }
+
+        @if (esSuperAdmin)
+        {
             <a class="nav-link" asp-controller="Admin" asp-action="Administradores">
                 <i class="bi bi-shield-lock"></i> Administradores
             </a>

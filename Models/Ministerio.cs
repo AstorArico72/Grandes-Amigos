@@ -7,6 +7,7 @@ namespace Grandes_Amigos.Models;
 public class Ministerio
 {
     [Key]
+    [Column("ID")]
     public int ID { get; set; }
 
     [Required(

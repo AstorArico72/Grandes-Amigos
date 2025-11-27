@@ -99,6 +99,37 @@ namespace Grandes_Amigos.Controllers
         [HttpGet("Usuarios")]
         public IActionResult Usuarios() => View("~/Views/Admin/Usuarios.cshtml");
 
+        // GET /Admin/Ministerios
+        [HttpGet("Ministerios")]
+        public IActionResult Ministerios()
+        {
+            if (!EsSuperAdmin())
+                return Forbid();
+
+            return View("~/Views/Admin/Ministerios/Index.cshtml");
+        }
+
+        // GET /Admin/Ministerios/Nuevo
+        [HttpGet("Ministerios/Nuevo")]
+        public IActionResult NuevoMinisterio()
+        {
+            if (!EsSuperAdmin())
+                return Forbid();
+
+            return View("~/Views/Admin/Ministerios/Nuevo.cshtml");
+        }
+
+        // GET /Admin/Ministerios/Editar/{id}
+        [HttpGet("Ministerios/Editar/{id:int}")]
+        public IActionResult EditarMinisterio(int id)
+        {
+            if (!EsSuperAdmin())
+                return Forbid();
+
+            ViewData["MinisterioId"] = id;
+            return View("~/Views/Admin/Ministerios/Editar.cshtml", id);
+        }
+
         // GET /Admin/Administradores
         [HttpGet("Administradores")]
         public async Task<IActionResult> Administradores()
