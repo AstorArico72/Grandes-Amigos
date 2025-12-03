@@ -1,0 +1,59 @@
+@model Evento;
+@{
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+    ViewData["Title"] = "Editar Evento";
+    var minDateValue = DateTime.Now.AddDays(1).ToString("yyyy-MM-ddTHH:mm");
+}
+
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Editar evento #@Model.ID</h5>
+            <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-sm btn-outline-secondary">Volver</a>
+        </div>
+
+        <form action="/Api/Eventos/Editar/@Model.ID" id="formulario" method="PUT" enctype="multipart/form-data" class="card-body">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="CampoTitulo" class="form-label">Título</label>
+                    <input type="text" name="Título" id="CampoTitulo" maxlength="100" class="form-control" value="@Model.Título" required/>
+                </div>
+
+                <div class="col-12">
+                    <label for="CampoDescripcion" class="form-label">Descripción</label>
+                    <textarea name="Descripción" id="CampoDescripcion" rows="6" class="form-control" required>@Model.Descripción</textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="CampoFecha" class="form-label">Fecha y hora</label>
+                    <input type="datetime-local" id="CampoFecha" name="Fecha" class="form-control" value="@Model.Fecha" min="@minDateValue" required />
+                    <div class="form-text">La fecha debe ser al menos 1 día en el futuro.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Ministerio</label>
+                    <input id="CampoMinisterio" name="ID_Ministerio" type="number" class="form-control" value="@Model.ID_Ministerio" placeholder="ID del ministerio (numérico)" />
+                </div>
+
+                <div class="col-12 col-md-8">
+                    <label for="CampoFoto" class="form-label">Foto (opcional)</label>
+                    <input type="file" name="Foto" id="CampoFoto" accept="image/*" class="form-control" value="@Model.Foto"/>
+                    <div class="form-text">JPG/PNG. Tamaño recomendado: <em>optimizar antes de subir</em>.</div>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar evento</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Admin guard + helpers -->
+    <script src="~/js/admin.js" asp-append-version="true"></script>
+    <!-- Lógica puntual del dashboard (si la estás usando) -->
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+    <script src="~/js/editar-evento.js" asp-append-version="true"></script>
+}

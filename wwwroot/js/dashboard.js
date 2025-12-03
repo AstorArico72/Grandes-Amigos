@@ -44,55 +44,55 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	// Cargar KPI y tabla de Eventos
-	if (kpiEventos && tblEventosBody) {
-		fetch('/Api/Eventos/Lista')
-			.then((r) =>
-				r.ok ? r.json() : Promise.reject('Error al cargar eventos')
-			)
-			.then((list) => {
-				const arr = Array.isArray(list) ? list : [];
-				kpiEventos.textContent = arr.length;
-
-				// Limpiar y renderizar tabla
-				tblEventosBody.innerHTML = '';
-				if (arr.length === 0) {
-					tblEventosBody.innerHTML =
-						'<tr><td colspan="4" class="text-center py-4 text-secondary">Sin eventos próximos</td></tr>';
-					return;
+	fetch('/Api/Eventos/Lista')
+		.then((r) => {
+			if (r.status == 200 || r.status == 304) {
+				r.json();
+			} else {
+				Promise.reject('Error al cargar eventos');
 				}
-
-				arr
-					.sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
-					.slice(0, 8) // Mostrar solo los primeros 8
-					.forEach((ev) => {
-						const tr = document.createElement('tr');
-						const fechaFormateada = new Date(ev.fecha).toLocaleString('es-AR', {
-							dateStyle: 'short',
-							timeStyle: 'short',
-						});
-
-						tr.innerHTML = `
-                <td class="fw-semibold">${ev.titulo ?? '(sin título)'}</td>
-                <td>${fechaFormateada} hs</td>
-                <td><span class="badge bg-dark-subtle text-light">${
-									ev.id_Ministerio ?? ev.id_ministerio ?? '-'
-								}</span></td>
-                <td class="text-end">
-                  <a class="btn btn-sm btn-outline-light" href="/Admin/Eventos/Editar/${
-										ev.id
-									}">
-                    <i class="bi bi-pencil"></i>
-                  </a>
-                </td>`;
-						tblEventosBody.appendChild(tr);
-					});
-			})
-			.catch(() => {
-				kpiEventos.textContent = 'Error';
+			}
+		)
+		.then((list) => {
+			//const arr = Array.isArray(list) ? list : [];
+			//const arr = Array.from (list);
+			kpiEventos.textContent = list.length;
+			// Limpiar y renderizar tabla
+			tblEventosBody.innerHTML = '';
+			if (list.length === 0) {
 				tblEventosBody.innerHTML =
-					'<tr><td colspan="4" class="text-center py-4 text-danger">No se pudieron cargar los eventos</td></tr>';
-			});
-	}
+					'<tr><td colspan="4" class="text-center py-4 text-secondary">Sin eventos próximos</td></tr>';
+				return;
+			}
+			list
+				.sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+				.forEach((ev) => {
+					const tr = document.createElement('tr');
+					const fechaFormateada = new Date(ev.Fecha).toLocaleString('es-AR', {
+						dateStyle: 'short',
+						timeStyle: 'short',
+					});
+					tr.innerHTML = `
+            <td class="fw-semibold">${ev.Título ?? '(sin título)'}</td>
+            <td>${fechaFormateada} hs</td>
+            <td><span class="badge bg-dark-subtle text-light">${
+								ev.ID_Ministerio ?? ev.ID_ministerio ?? '-'
+							}</span></td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-light" href="/Admin/Eventos/Editar/${
+									ev.ID
+								}">
+                <i class="bi bi-pencil"></i>
+              </a>
+            </td>`;
+					tblEventosBody.appendChild(tr);
+				});
+		})
+		.catch((rejected) => {
+			kpiEventos.textContent = 'Error';
+			tblEventosBody.innerHTML =
+				'<tr><td colspan="4" class="text-center py-4 text-danger">No se pudieron cargar los eventos</td></tr>';
+		});
 
 	// Cargar Noticias (acción de botón)
 	if (kpiNoticias) kpiNoticias.textContent = 'N/A';

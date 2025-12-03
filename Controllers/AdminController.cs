@@ -75,6 +75,18 @@ namespace Grandes_Amigos.Controllers
             return View("~/Views/Admin/NuevoEvento.cshtml");
         }
 
+        [HttpGet("EditarEvento/{id}")]
+        public IActionResult Editar ([FromRoute] int id)
+        {
+            Evento? EventoSeleccionado = _ctx.Eventos.Find (id);
+            if (EventoSeleccionado == null)
+            {
+                return BadRequest ("El evento seleccionado no existe.");
+            } else{
+                return View ("~/Views/Admin/EditarEvento.cshtml", EventoSeleccionado);
+            }
+        }
+
         // /Admin redirige al Dashboard
         [HttpGet("")]
         public IActionResult Index() => RedirectToAction(nameof(Dashboard));

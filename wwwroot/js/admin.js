@@ -64,7 +64,7 @@
 
                     if (eventTableBody) {
                         eventTableBody.innerHTML = '';
-                        const list = Array.isArray(events) ? events.slice(0, 5) : [];
+                        const list = Array.from (events);
                         if (list.length === 0) {
                             eventTableBody.innerHTML =
                                 '<tr><td colspan="3" class="text-center p-4">No hay eventos proximos.</td></tr>';
@@ -76,17 +76,25 @@
                                           day: '2-digit',
                                           month: '2-digit',
                                           year: 'numeric',
+                                          hour: "numeric",
+                                          hour12: false,
+                                          minute: "numeric"
                                       })
                                     : '-';
                                 eventTableBody.insertAdjacentHTML(
                                     'beforeend',
-                                    `<tr>
-                      <td>${ev.titulo || ev.Titulo || '-'}</td>
-                      <td>${fechaStr}</td>
-                      <td class="text-end">
-                        <a href="#" class="btn btn-sm btn-outline-primary">Ver</a>
-                      </td>
-                   </tr>`
+                                    `<td class="fw-semibold">${ev.título ?? '(sin título)'}</td>
+                                    <td>${fechaStr} hs</td>
+                                    <td><span class="badge bg-dark-subtle text-light">${
+			                        					ev.ID_Ministerio ?? ev.id_ministerio ?? '-'
+			                        				}</span></td>
+                                    <td class="text-end">
+                                      <a class="btn btn-sm btn-outline-light" href="/Admin/EditarEvento/${
+			                        						ev.ID ?? ev.id
+			                        					}">
+                                        <i class="bi bi-pencil"></i>
+                                      </a>
+                                    </td>`
                                 );
                             }
                         }

@@ -194,7 +194,7 @@ public class EventosController : Controller
     )]
     [SwaggerResponse(401, "Se accedió sin autorización.")]
     [SwaggerResponse(500, "Ocurrió una excepción MySQL. Lee la respuesta atentamente.")]
-    public IActionResult EditarEvento([FromRoute] int id, [FromForm] Evento EventoEditado)
+    public IActionResult EditarEvento([FromRoute] int id, [FromForm] Evento EventoEditado, [FromForm] IFormFile? Foto)
     {
         //Ésta función es para editar el evento como un todo.
         //Ésta función debería ser llamada desde un formulario parecido o idéntico al de crear eventos.
@@ -205,6 +205,31 @@ public class EventosController : Controller
         Ministerio? ministerio = Contexto.Ministerios.Find(EventoEditado.ID_Ministerio);
         if (EventoSeleccionado != null)
         {
+            // Procesar archivo si llegó
+            if (Foto != null && Foto.Length > 0)
+            {
+                var uploads = Path.Combine(_env.WebRootPath ?? "wwwroot", "uploads", "eventos");
+                if (!Directory.Exists(uploads))
+                    Directory.CreateDirectory(uploads);
+
+                var ext = Path.GetExtension(Foto.FileName);
+                var fileName = $"{Guid.NewGuid()}{ext}";
+                var filePath = Path.Combine(uploads, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    Foto.CopyTo(stream);
+                }
+
+                // Ruta pública para guardar en DB
+                EventoEditado.Foto = $"/uploads/eventos/{fileName}";
+            }
+
+            // Evitar validación fallida porque el model binder no asigna el IFormFile al string Foto
+            // y porque la propiedad de navegación Ministerio ahora es nullable.
+            ModelState.Remove(nameof(EventoEditado.Foto));
+            ModelState.Remove(nameof(EventoEditado.Ministerio));
+            
             if (EventoEditado.Fecha <= DateTime.Today)
             {
                 ModelState.AddModelError(
