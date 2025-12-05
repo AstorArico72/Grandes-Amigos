@@ -58,7 +58,7 @@ public class EventosController : Controller
     public IActionResult PorMinisterio([FromRoute] string Ministerio)
     {
         Ministerio? min = Contexto.Ministerios.FirstOrDefault(m =>
-            m.Nombre.ToLower() == Ministerio.ToLower()
+            m.Nombre == Ministerio
         ); //Ésto permite entrarlo tanto con o sin mayúsculas.
 
         if (min == null)

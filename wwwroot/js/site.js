@@ -489,15 +489,12 @@ document.addEventListener('DOMContentLoaded', function () {
 										}
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">${
-													evento.titulo || evento.Titulo || 'Evento'
+													evento.título || 'Evento'
 												}</h5>
                         <p class="text-muted mb-2"><i class="bi bi-calendar-event"></i> ${fechaFormateada}</p>
                         <p class="card-text">${
-													evento.descripcion || 'Sin descripción'
+													evento.descripción || 'Sin descripción'
 												}</p>
-                        <small class="text-muted mt-auto"><i class="bi bi-people"></i> Ministerio: ${
-													evento.ministerioNombre
-												}</small>
                     </div>
                 </div>`;
 
@@ -514,8 +511,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
 		fetch(`/Api/Eventos/PorMinisterio/${encodeURIComponent(nombreMinisterio)}`)
 			.then((r) => {
-				if (!r.ok) throw new Error('No se pudieron obtener los eventos.');
-				return r.json();
+				if (!r.ok) {
+					throw new Error('No se pudieron obtener los eventos.');
+				} else {
+					return r.json();
+				}
 			})
 			.then((eventos) => {
 				const ahora = new Date();
