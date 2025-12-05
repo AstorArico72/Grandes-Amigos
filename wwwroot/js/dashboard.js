@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function () {
 	// --- Helpers para obtener datos de sesión ---
 	const token = localStorage.getItem('adminToken');
 	const authHeaders = token ? { Authorization: 'Bearer ' + token } : {};
+	const noCacheHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    };
 	const getAdminData = () => {
 		try {
 			return JSON.parse(localStorage.getItem('adminData') || 'null');
@@ -44,16 +49,17 @@ document.addEventListener('DOMContentLoaded', function () {
 	}
 
 	// Cargar KPI y tabla de Eventos
-	fetch('/Api/Eventos/Lista')
-		.then((r) => {
-			if (r.status == 200 || r.status == 304) {
-				r.json();
-			} else {
-				Promise.reject('Error al cargar eventos');
+	if (kpiEventos && tblEventosBody) {
+		fetch('/Api/Eventos/Lista', {headers: noCacheHeaders})
+			.then((r) => {
+				if (r.ok) {
+					return r.json();
+				} else {
+					return Promise.reject('Error al cargar eventos');
+					}
 				}
-			}
-		)
-		.then((list) => {
+			)
+			.then((list) => {
 			//const arr = Array.isArray(list) ? list : [];
 			//const arr = Array.from (list);
 			kpiEventos.textContent = list.length;
@@ -73,26 +79,23 @@ document.addEventListener('DOMContentLoaded', function () {
 						timeStyle: 'short',
 					});
 					tr.innerHTML = `
-            <td class="fw-semibold">${ev.Título ?? '(sin título)'}</td>
-            <td>${fechaFormateada} hs</td>
-            <td><span class="badge bg-dark-subtle text-light">${
+    	    <td class="fw-semibold">${ev.Título ?? '(sin título)'}</td>
+    	    <td>${fechaFormateada} hs</td>
+    	    <td><span class="badge bg-dark-subtle text-light">${
 								ev.ID_Ministerio ?? ev.ID_ministerio ?? '-'
 							}</span></td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-light" href="/Admin/Eventos/Editar/${
-									ev.ID
-								}">
-                <i class="bi bi-pencil"></i>
-              </a>
-            </td>`;
+    	    <td class="text-end">
+    	      <button class="btn btn-danger btn-sm btn-outline-light btn-borrar" data-id="${ev.ID}" data-nombre="${ev.Título}"/>
+    	    </td>`;
 					tblEventosBody.appendChild(tr);
-				});
+			});
 		})
-		.catch((rejected) => {
-			kpiEventos.textContent = 'Error';
-			tblEventosBody.innerHTML =
-				'<tr><td colspan="4" class="text-center py-4 text-danger">No se pudieron cargar los eventos</td></tr>';
+		.catch(() => {
+				kpiEventos.textContent = 'Error';
+				tblEventosBody.innerHTML =
+					'<tr><td colspan="4" class="text-center py-4 text-danger">No se pudieron cargar los eventos</td></tr>';
 		});
+	}
 
 	// Cargar Noticias (acción de botón)
 	if (kpiNoticias) kpiNoticias.textContent = 'N/A';
@@ -126,4 +129,42 @@ document.addEventListener('DOMContentLoaded', function () {
 			}
 		});
 	}
+
+	tblEventosBody.addEventListener ('click', async (ev) => {
+		const btn = ev.target.closest('.btn-borrar');
+		if (!btn) return;
+
+		const id = btn.dataset.id;
+		const nombre = btn.dataset.nombre || '';
+
+		const ok = await Swal.fire({
+			title: '¿Borrar evento?',
+			text: `El evento \"${nombre}\" será borrado, y no puede deshacerse.`,
+			icon: 'warning',
+			showCancelButton: true,
+			confirmButtonText: 'Borrar',
+			cancelButtonText: 'Cancelar',
+		}).then((r) => r.isConfirmed);
+
+		if (!ok) return;
+
+		try {
+			const res = await fetch(
+				`/Api/Eventos/Borrar/${encodeURIComponent(id)}`,
+				{
+					method: 'DELETE',
+					headers: authHeaders,
+				}
+			);
+			if (!res.ok) {
+				const txt = await res.text();
+				throw new Error(txt || 'No se pudo eliminar.');
+			}
+			Swal.fire('Eliminado', 'El evento fue eliminado.', 'success').then(() => {
+				window.location.href = '/Admin/Dashboard';
+			});
+		} catch (err) {
+			Swal.fire('Error', err.message || 'Fallo al eliminar.', 'error');
+		}
+	});
 });

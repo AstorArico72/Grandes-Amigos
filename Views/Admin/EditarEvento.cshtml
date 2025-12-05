@@ -26,7 +26,7 @@
 
                 <div class="col-md-6">
                     <label for="CampoFecha" class="form-label">Fecha y hora</label>
-                    <input type="datetime-local" id="CampoFecha" name="Fecha" class="form-control" value="@Model.Fecha" min="@minDateValue" required />
+                    <input type="datetime-local" id="CampoFecha" name="Fecha" class="form-control" value="@Model.Fecha.ToString("yyyy-MM-ddTHH:mm")" min="@minDateValue" required />
                     <div class="form-text">La fecha debe ser al menos 1 día en el futuro.</div>
                 </div>
 

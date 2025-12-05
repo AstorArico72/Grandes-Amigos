@@ -1,6 +1,12 @@
 (function () {
     'use strict';
 
+    const noCacheHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    };
+
     function getAuthHeaders() {
         const t = localStorage.getItem('adminToken');
         return t ? { Authorization: `Bearer ${t}` } : {};
@@ -39,7 +45,7 @@
             // Pedidos en paralelo (usuarios requiere Bearer; eventos es publico)
             const [usersRes, eventsRes] = await Promise.all([
                 fetch('/Api/Usuarios/Todos', { headers: getAuthHeaders() }),
-                fetch('/Api/Eventos/Lista'),
+                fetch('/Api/Eventos/Lista', {headers: noCacheHeaders}),
             ]);
 
             // Usuarios
@@ -85,8 +91,8 @@
                                     'beforeend',
                                     `<td class="fw-semibold">${ev.título ?? '(sin título)'}</td>
                                     <td>${fechaStr} hs</td>
-                                    <td><span class="badge bg-dark-subtle text-light">${
-			                        					ev.ID_Ministerio ?? ev.id_ministerio ?? '-'
+                                    <td><span class="badge bg-dark text-light">${
+			                        					ev.iD_Ministerio ?? '-'
 			                        				}</span></td>
                                     <td class="text-end">
                                       <a class="btn btn-sm btn-outline-light" href="/Admin/EditarEvento/${
@@ -94,6 +100,9 @@
 			                        					}">
                                         <i class="bi bi-pencil"></i>
                                       </a>
+                                        <button class="btn btn-danger btn-sm btn-outline-light btn-borrar" data-id="${ev.id}" data-nombre="${ev.título}">
+                                	        <i class="bi bi-trash"></i>
+    	                                </button>
                                     </td>`
                                 );
                             }
