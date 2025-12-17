@@ -25,19 +25,6 @@ public class InscripcionController : Controller
     }
 
     [AllowAnonymous]
-    [HttpGet("Inscribirse")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult FormularioInscripcion([FromQuery] int IdEvento)
-    {
-        //Éste método carga el formulario para la inscripción.
-        //Cada evento en /Eventos/{id} tendrá un botón que enlaza a ésta URL, con el ID del evento en el querystring.
-        //En la vista, tiene que haber un <input> "escondido" (type="hidden") que tiene el nombre "IdEvento".
-        //Ése campo es llenado por el valor del querystring.
-        //El querystring es importante, ver explicación debajo.
-        return View();
-    }
-
-    [AllowAnonymous]
     [HttpPost("Nueva")] //Pendiente: Decidir si será un formulario POST o un enlace GET con poca interacción del usuario.
     [SwaggerOperation(
         Summary = "Crea una nueva inscripción.",

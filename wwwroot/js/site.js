@@ -244,14 +244,22 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
 
 		fetch('/Api/Eventos/MisEventos', {
-			headers: { Authorization: 'Bearer ' + token },
+			headers: {
+				'Authorization': 'Bearer ' + token,
+				'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'}
 		})
-			.then((r) => r.json())
-			.then((eventos) => {
-				if (!eventos.length) {
-					cont.innerHTML = `<div class="alert alert-info">No estás inscrito en ningún evento.</div>`;
-					return;
-				}
+		.then((r) => {
+            if (!r.ok) {
+                throw new Error(`Error ${r.status}: ${r.statusText}`);
+            }
+            return r.json();
+        })
+        .then((eventos) => {
+            if (!eventos || !Array.isArray(eventos) || eventos.length === 0) {
+                cont.innerHTML = `<div class="alert alert-info">No estás inscrito en ningún evento.</div>`;
+                return;
+            }
 
 				cont.innerHTML = eventos
 					.map(

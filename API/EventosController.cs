@@ -1,5 +1,6 @@
 using System.IO;
 using Grandes_Amigos.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -308,7 +309,7 @@ public class EventosController : Controller
         }
     }
 
-    [Authorize(Policy = "Usuario")]
+    [Authorize(Policy = "Usuario", AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet("MisEventos")]
     [SwaggerOperation(
         Summary = "Lista los eventos asociados a los que se ha inscrito el usuario.",
