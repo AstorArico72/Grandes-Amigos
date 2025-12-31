@@ -44,8 +44,8 @@ Es necesario tener soporte **.NET Core 8** y **MySQL**. Es recomendable instalar
 1. [Descargar el código de la última versión.](https://github.com/AstorArico72/Grandes-Amigos/releases/tag/v0.2)
 2. Abrir la consola de comandos en el directorio donde se instaló la aplicación web.
 3. Iniciar el servidor MySQL.
-4. Compilar la aplicación web, con éste comando en la consola: ´dotnet build´
-5. Iniciar la aplicación web, con éste comando en la consola: ´dotnet run´
+4. Compilar la aplicación web, con éste comando en la consola: `dotnet build`
+5. Iniciar la aplicación web, con éste comando en la consola: `dotnet run`
 
 ---
 
@@ -93,7 +93,7 @@ This web app is not ready for a production environment, as the following is yet 
 1. [Download the latest release's source code.](https://github.com/AstorArico72/Grandes-Amigos/releases/tag/v0.2)
 2. Open the command prompt in the directory where the web app was installed.
 3. Boot the MySQL server.
-4. Compile the web app with the following command: ´dotnet build´
-5. Start the web app with the following command: ´dotnet run´
+4. Compile the web app with the following command: `dotnet build`
+5. Start the web app with the following command: `dotnet run`
 
 ### The web app is available only in Spanish.
